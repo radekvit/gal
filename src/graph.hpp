@@ -11,7 +11,7 @@ class ColoredGraph {
   class ConstNode;
 
   explicit ColoredGraph(std::initializer_list<std::vector<size_t>> il)
-      : nodeTransitions_(il) {
+      : nodeTransitions_(il), nodeColors_(il.size(), 0) {
     for (auto&& transitionList : nodeTransitions_) {
       // sort and limit transitions to at most 1
       std::sort(transitionList.begin(), transitionList.end());
