@@ -17,7 +17,9 @@
 class ColoredGraph {
  public:
   class Node;
-  class ConstNode;
+
+  using iterator = std::vector<Node>::iterator;
+  using const_iterator = std::vector<Node>::const_iterator;
 
   /**
    * Creates graph from vector of vectors of edges.
@@ -25,7 +27,10 @@ class ColoredGraph {
    * 	Each edge vector represents one node.
    */
   ColoredGraph(std::vector<std::vector<size_t>>& nodes)
-      : nodeTransitions_(nodes), nodeColors_(nodes.size(), 0) {
+  {
+    for (size_t i = 0; i < nodes.size(); ++i) {
+      nodes_.push_back(Node(i, nodes[i], 0));
+    }
     validateTransitions();
   }
 
@@ -45,19 +50,18 @@ class ColoredGraph {
    */
   ColoredGraph(std::istream& is) {
     std::string line;
-    size_t node = 1;
+    size_t id = 0;
 
     while (std::getline(is, line)) {
-      nodeTransitions_.push_back({});
-      nodeColors_.push_back(0);
+      nodes_.push_back(Node(id, {}, 0));
 
       std::istringstream lineIss(line);
 
       size_t edge;
       while (lineIss >> edge)
-        nodeTransitions_.back().push_back(edge);
+        nodes_.back().transitions_.push_back(edge);
 
-      ++node;
+      ++id;
     }
 
     validateTransitions();
@@ -68,13 +72,19 @@ class ColoredGraph {
   ColoredGraph& operator=(const ColoredGraph&) = default;
   ColoredGraph& operator=(ColoredGraph&&) noexcept = default;
 
-  size_t size() { return nodeTransitions_.size(); }
+  size_t size() { return nodes_.size(); }
 
-  Node node(size_t i) noexcept { return Node(*this, i); }
-  Node operator[](size_t i) noexcept { return node(i); }
+  iterator begin() { return nodes_.begin(); }
+  iterator end() { return nodes_.end(); }
 
-  ConstNode node(size_t i) const noexcept { return ConstNode(*this, i); }
-  ConstNode operator[](size_t i) const noexcept { return node(i); }
+  const_iterator begin() const { return nodes_.cbegin(); }
+  const_iterator end() const { return nodes_.cend(); }
+
+  Node& node(size_t i) noexcept { return nodes_[i]; }
+  Node& operator[](size_t i) noexcept { return node(i); }
+
+  const Node& node(size_t i) const noexcept { return nodes_[i]; }
+  const Node& operator[](size_t i) const noexcept { return node(i); }
 
   /**
    * Prints graph to ostream.
@@ -84,13 +94,14 @@ class ColoredGraph {
    * @return the stream
    */
   friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g) {
-    for (const auto& node : g.nodeTransitions_) {
-      auto iterEdges = node.begin();
-      if (iterEdges != node.end()) {
-        os << *iterEdges++;
+    for (const auto& node : g.nodes_) {
+      auto&& transitions = node.transitions();
+      auto it = transitions.begin();
+      if (it != transitions.end()) {
+        os << *it++;
       }
-      while (iterEdges != node.end()) {
-        os << " " << *iterEdges++;
+      while (it != transitions.end()) {
+        os << " " << *it++;
       }
       os << "\n";
     }
@@ -99,62 +110,36 @@ class ColoredGraph {
 
   class Node {
    public:
-    Node(ColoredGraph& g, size_t i) noexcept
-        : id_(i)
-        , transitions_(&(g.nodeTransitions_[i]))
-        , color_(&(g.nodeColors_[i])) {}
+    friend class ColoredGraph;
+    Node(size_t id,
+         const std::vector<size_t>& transitions,
+         size_t color) noexcept
+        : id_(id), transitions_(transitions), color_(color) {}
 
     size_t id() const noexcept { return id_; }
     explicit operator size_t() const noexcept { return id(); }
 
     const std::vector<size_t>& transitions() const noexcept {
-      return *transitions_;
+      return transitions_;
     }
 
-    bool transitionsTo(size_t i) {
-      auto it = std::lower_bound(transitions_->begin(), transitions_->end(), i);
-      return it != transitions_->end() && *it == i;
+    bool transitionsTo(size_t i) noexcept {
+      auto it = std::lower_bound(transitions_.begin(), transitions_.end(), i);
+      return it != transitions_.end() && *it == i;
     }
 
-    size_t& color() noexcept { return *color_; }
+    size_t color() const noexcept { return color_; }
+    size_t& color() noexcept { return color_; }
 
    private:
     size_t id_;
-    const std::vector<size_t>* transitions_;
-    size_t* color_;
-  };
-
-  class ConstNode {
-   public:
-    ConstNode(const ColoredGraph& g, size_t i) noexcept
-        : id_(i)
-        , transitions_(&(g.nodeTransitions_[i]))
-        , color_(g.nodeColors_[i]) {}
-
-    size_t id() const noexcept { return id_; }
-    explicit operator size_t() const noexcept { return id(); }
-
-    const std::vector<size_t>& transitions() const noexcept {
-      return *transitions_;
-    }
-
-    bool transitionsTo(size_t i) {
-      auto it = std::lower_bound(transitions_->begin(), transitions_->end(), i);
-      return it != transitions_->end() && *it == i;
-    }
-
-    size_t color() noexcept { return color_; }
-
-   private:
-    size_t id_;
-    const std::vector<size_t>* transitions_;
+    std::vector<size_t> transitions_;
     size_t color_;
   };
 
  private:
-  std::vector<std::vector<size_t>> nodeTransitions_;
-  std::vector<size_t> nodeColors_;
-  size_t colors_ = 0;
+  std::vector<Node> nodes_;
+  size_t colorCount_ = 0;
 
   /**
    * Performs graph validation.
@@ -162,7 +147,8 @@ class ColoredGraph {
    * @throw invalid_argument	When node have transition to nonexistent node.
    */
   void validateTransitions() {
-    for (auto&& transitionList : nodeTransitions_) {
+    for (auto&& node : nodes_) {
+      auto&& transitionList = node.transitions_;
       // sort and limit transitions to at most 1
       std::sort(transitionList.begin(), transitionList.end());
       transitionList.erase(
