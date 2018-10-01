@@ -3,3 +3,7 @@
 *.o
 .vscode
 docs/
+.settings
+.cproject
+.project
+.autotools
