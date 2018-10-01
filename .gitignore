@@ -3,6 +3,7 @@
 *.o
 .vscode
 docs/
+obj/
 .settings
 .cproject
 .project
