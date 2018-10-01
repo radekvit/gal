@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ColoredGraph graph = ColoredGraph::readFrom(*input);
+  ColoredGraph graph(*input);
 
   std::cout << graph;
 

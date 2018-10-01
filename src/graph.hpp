@@ -9,7 +9,9 @@
 #define GAL_GRAPH_HPP
 
 #include <algorithm>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 class ColoredGraph {
@@ -17,10 +19,6 @@ class ColoredGraph {
   class Node;
   class ConstNode;
 
-  explicit ColoredGraph(std::initializer_list<std::vector<size_t>> il)
-      : nodeTransitions_(il), nodeColors_(il.size(), 0) {
-    validate();
-  }
   /**
    * Creates graph from vector of vectors of edges.
    * @param[in] nodes	Vector that consists of vectors containing edges.
@@ -28,7 +26,7 @@ class ColoredGraph {
    */
   ColoredGraph(std::vector<std::vector<size_t>>& nodes)
       : nodeTransitions_(nodes), nodeColors_(nodes.size(), 0) {
-    validate();
+    validateTransitions();
   }
 
   /**
@@ -45,7 +43,25 @@ class ColoredGraph {
    *
    * 		This example represents graph with three nodes (0-2) and 6 edges.
    */
-  static ColoredGraph readFrom(std::istream& is);
+  ColoredGraph(std::istream& is) {
+    std::string line;
+    size_t node = 1;
+
+    while (std::getline(is, line)) {
+      nodeTransitions_.push_back({});
+      nodeColors_.push_back(0);
+
+      std::istringstream lineIss(line);
+
+      size_t edge;
+      while (lineIss >> edge)
+        nodeTransitions_.back().push_back(edge);
+
+      ++node;
+    }
+
+    validateTransitions();
+  }
 
   ColoredGraph(const ColoredGraph&) = default;
   ColoredGraph(ColoredGraph&&) noexcept = default;
@@ -67,7 +83,19 @@ class ColoredGraph {
    * @param[in] g	Graph for printing.
    * @return the stream
    */
-  friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g);
+  friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g) {
+    for (const auto& node : g.nodeTransitions_) {
+      auto iterEdges = node.begin();
+      if (iterEdges != node.end()) {
+        os << *iterEdges++;
+      }
+      while (iterEdges != node.end()) {
+        os << " " << *iterEdges++;
+      }
+      os << "\n";
+    }
+    return os;
+  }
 
   class Node {
    public:
@@ -133,7 +161,7 @@ class ColoredGraph {
    *
    * @throw invalid_argument	When node have transition to nonexistent node.
    */
-  void validate() {
+  void validateTransitions() {
     for (auto&& transitionList : nodeTransitions_) {
       // sort and limit transitions to at most 1
       std::sort(transitionList.begin(), transitionList.end());
@@ -149,8 +177,6 @@ class ColoredGraph {
     }
   }
 };
-
-std::ostream& operator<<(std::ostream& os, const ColoredGraph& g);
 
 #endif
 /*** End of file: graph.hpp ***/
