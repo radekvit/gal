@@ -9,6 +9,8 @@
 #define GAL_GRAPH_HPP
 
 #include <algorithm>
+#include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -21,17 +23,19 @@ class ColoredGraph {
   using iterator = std::vector<Node>::iterator;
   using const_iterator = std::vector<Node>::const_iterator;
 
+  static const size_t NO_COLOR = 0;
+
   /**
    * Creates graph from vector of vectors of edges.
    * @param[in] nodes	Vector that consists of vectors containing edges.
    * 	Each edge vector represents one node.
    */
-  ColoredGraph(std::vector<std::vector<size_t>>& nodes)
-  {
+  ColoredGraph(std::vector<std::vector<size_t>>& nodes) {
     for (size_t i = 0; i < nodes.size(); ++i) {
-      nodes_.push_back(Node(i, nodes[i], 0));
+      nodes_.push_back(Node(i, nodes[i], NO_COLOR));
     }
     validateTransitions();
+    convToUndirected();
   }
 
   /**
@@ -65,6 +69,7 @@ class ColoredGraph {
     }
 
     validateTransitions();
+    convToUndirected();
   }
 
   ColoredGraph(const ColoredGraph&) = default;
@@ -95,8 +100,10 @@ class ColoredGraph {
    */
   friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g) {
     for (const auto& node : g.nodes_) {
+      os << node.id() << ") color: " << node.color() << ", edges: ";
       auto&& transitions = node.transitions();
       auto it = transitions.begin();
+
       if (it != transitions.end()) {
         os << *it++;
       }
@@ -137,6 +144,51 @@ class ColoredGraph {
     size_t color_;
   };
 
+  /**
+   * Color the graph with greedy coloring algorithm.
+   * Use this function on
+   */
+  void greedyColoring() {
+    washColors();
+    size_t numberOfUsedColors = 0;
+    for (auto& n : *this) {
+      std::set<size_t> neighboursColors;
+      for (const auto& neighbourIndex : n.transitions())
+        neighboursColors.insert(nodes_[neighbourIndex].color());
+
+      // instead of if in for loop we just remove NO_COLOR after
+      neighboursColors.erase(NO_COLOR);
+
+      if (neighboursColors.size() < numberOfUsedColors) {
+        // we can recycle smallest unused color
+        size_t tryColor =
+            NO_COLOR + 1;  // we are starting with smallest possible color
+        for (size_t usedColor : neighboursColors) {
+          // neighboursColors is order so we can check just difference
+          if (usedColor - tryColor > 0) {
+            // we found the color
+            break;
+          } else {
+            // ok we are moving forward
+            ++tryColor;
+          }
+        }
+        n.color() = tryColor;
+      } else {
+        // ok, we need a new one
+        n.color() = ++numberOfUsedColors;
+      }
+    }
+  }
+
+  /**
+   * Clears colors from all nodes.
+   */
+  void washColors() {
+    for (auto& n : *this)
+      n.color_ = NO_COLOR;
+  }
+
  private:
   std::vector<Node> nodes_;
   size_t colorCount_ = 0;
@@ -158,6 +210,59 @@ class ColoredGraph {
       for (auto&& nextNode : transitionList) {
         if (nextNode >= size()) {
           throw std::invalid_argument("Node transition to nonexistent node.");
+        }
+      }
+    }
+  }
+
+  /**
+   * Converts this graph to undirected one.
+   */
+  void convToUndirected() {
+    edgeSymmetrization();
+
+    // ok, now we just remove the loops and edges that are there multiple
+    // times
+    std::map<size_t, size_t> connectedWith;
+    for (auto& node : nodes_)
+      // initialize with id that does not belong to any of the nodes
+      connectedWith[node.id()] = nodes_.size();
+
+    for (auto& node : nodes_) {
+      std::vector<size_t> newEdges;
+      for (auto edge : node.transitions()) {
+        if (connectedWith[edge] != node.id() && edge != node.id()) {
+          newEdges.push_back(edge);
+          connectedWith[edge] = node.id();
+        }
+      }
+
+      node.transitions_.swap(newEdges);
+    }
+  }
+
+  /**
+   * Performs symmetrization of edges.
+   */
+  void edgeSymmetrization() {
+    for (auto& node : nodes_) {
+      size_t numOfEdges = node.transitions_.size();  // num of edges on the
+                                                     // start
+      for (size_t i = 0; i < numOfEdges; ++i) {
+        if (node.transitions_[i] < nodes_.size()) {
+          // original edge
+          if (node.id() < node.transitions_[i]) {
+            // needs marking because of future processing
+            nodes_[node.transitions_[i]].transitions_.push_back(nodes_.size() +
+                                                                node.id());
+          } else {
+            // no need for, mark because the node was already processed
+            nodes_[node.transitions_[i]].transitions_.push_back(node.id());
+          }
+        } else {
+          // this edge was symmetrized
+          // lets remove the mark
+          node.transitions_[i] -= nodes_.size();
         }
       }
     }

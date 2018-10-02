@@ -33,6 +33,8 @@ int main(int argc, char* argv[]) {
 
   ColoredGraph graph(*input);
 
+  graph.greedyColoring();
+
   std::cout << graph;
 
   return 0;
