@@ -150,7 +150,7 @@ class ColoredGraph {
    */
   void greedyColoring() {
     washColors();
-    size_t numberOfUsedColors = 0;
+    colorCount_ = 0;
     for (auto& n : *this) {
       std::set<size_t> neighboursColors;
       for (const auto& neighbourIndex : n.transitions())
@@ -159,7 +159,7 @@ class ColoredGraph {
       // instead of if in for loop we just remove NO_COLOR after
       neighboursColors.erase(NO_COLOR);
 
-      if (neighboursColors.size() < numberOfUsedColors) {
+      if (neighboursColors.size() < colorCount_) {
         // we can recycle smallest unused color
         size_t tryColor =
             NO_COLOR + 1;  // we are starting with smallest possible color
@@ -176,7 +176,7 @@ class ColoredGraph {
         n.color() = tryColor;
       } else {
         // ok, we need a new one
-        n.color() = ++numberOfUsedColors;
+        n.color() = ++colorCount_;
       }
     }
   }
