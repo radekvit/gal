@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+
+#include "coloring_alg.hpp"
 #include "graph.hpp"
 
 int main(int argc, char* argv[]) {
@@ -32,9 +34,11 @@ int main(int argc, char* argv[]) {
   }
 
   ColoredGraph graph(*input);
-
-  graph.greedyColoring();
-
+  greedyColoring(graph);
+  std::cout << graph;
+  largestDegreeOrderingColoring(graph);
+  std::cout << graph;
+  incidenceDegreeOrdering(graph);
   std::cout << graph;
 
   return 0;

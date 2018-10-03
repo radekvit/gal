@@ -146,9 +146,46 @@ class ColoredGraph {
 
   /**
    * Color the graph with greedy coloring algorithm.
-   * Use this function on
+   * Source: http://www.new-npac.org/users/fox/pdftotal/sccs-0666.pdf
+   *
    */
   void greedyColoring() {
+    washColors();
+    colorCount_ = 0;
+
+    auto iterNodes = (*this).begin();
+    if (iterNodes == (*this).end())
+      return;  // yeah, my work is done
+
+    std::vector<bool> neighboursColors(nodes_.size(), false);
+    (*iterNodes).color() = NO_COLOR + 1;
+    colorCount_ = 1;
+
+    for (++iterNodes; iterNodes != (*this).end(); ++iterNodes) {
+      for (const auto& neighbourIndex : (*iterNodes).transitions()) {
+        if (nodes_[neighbourIndex].color() != NO_COLOR)
+          neighboursColors[nodes_[neighbourIndex].color() - 1] = true;
+      }
+
+      for (size_t i = 0; i < neighboursColors.size(); ++i) {
+        // find the smallest unused color
+        if (neighboursColors[i] == false) {
+          (*iterNodes).color() = NO_COLOR + i + 1;
+          if ((*iterNodes).color() > colorCount_)
+            colorCount_++;  // we have brand new color here
+          break;
+        }
+      }
+      // clear
+      for (const auto& neighbourIndex : (*iterNodes).transitions()) {
+        neighboursColors[nodes_[neighbourIndex].color() - 1] = false;
+      }
+    }
+  }
+  /**
+   * Color the graph with greedy coloring algorithm.
+   */
+  void greedyColoringWithSet() {
     washColors();
     colorCount_ = 0;
     for (auto& n : *this) {
@@ -188,6 +225,10 @@ class ColoredGraph {
     for (auto& n : *this)
       n.color_ = NO_COLOR;
   }
+
+  size_t getColorCount() const { return colorCount_; }
+
+  void setColorCount(size_t colorCount = 0) { colorCount_ = colorCount; }
 
  private:
   std::vector<Node> nodes_;
