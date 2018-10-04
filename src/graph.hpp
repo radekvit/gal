@@ -230,6 +230,21 @@ class ColoredGraph {
 
   void setColorCount(size_t colorCount = 0) { colorCount_ = colorCount; }
 
+  /**
+   * Checks if graph is colored.
+   * 	All nodes have colors and no two connected nodes have same color.
+   *
+   * @return True -> colored. False -> something fishy.
+   */
+  bool validateColors(){
+	  for(const auto& node : nodes_){
+		  if(node.color()==NO_COLOR) return false;
+		  for(const auto& edge : node.transitions())
+			  if(nodes_[edge].color()==node.color()) return false;
+	  }
+	  return true;
+  }
+
  private:
   std::vector<Node> nodes_;
   size_t colorCount_ = 0;

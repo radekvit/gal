@@ -36,10 +36,13 @@ int main(int argc, char* argv[]) {
   ColoredGraph graph(*input);
   greedyColoring(graph);
   std::cout << graph;
+  std::cout << "Valid: " << graph.validateColors() << std::endl;
   largestDegreeOrderingColoring(graph);
   std::cout << graph;
+  std::cout << "Valid: " << graph.validateColors() << std::endl;
   incidenceDegreeOrdering(graph);
   std::cout << graph;
+  std::cout << "Valid: " << graph.validateColors() << std::endl;
 
   return 0;
 }
