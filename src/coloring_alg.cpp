@@ -6,7 +6,7 @@
  * @brief Source file of module containing coloring algorithms.
  */
 
-#include "coloring_alg.hpp"
+#include "coloring_alg.h"
 
 #include <algorithm>
 #include <map>
@@ -32,44 +32,41 @@ size_t findSmallestUnusedColor(const std::vector<size_t>& neighbors,
                                std::vector<bool>& neighboursColors,
                                const ColoredGraph& graph) {
   for (const auto& neighbourIndex : neighbors) {
-    if (graph.node(neighbourIndex).color() != graph.NO_COLOR)
-      neighboursColors[graph.node(neighbourIndex).color() - 1] = true;
+    if (graph[neighbourIndex].color() != graph.NO_COLOR)
+      neighboursColors[graph[neighbourIndex].color() - 1] = true;
   }
   size_t smallest = graph.NO_COLOR;
   for (size_t i = 0; i < neighboursColors.size(); ++i) {
     // find the smallest unused color
-    if (neighboursColors[i] == false) {
+    if (!neighboursColors[i]) {
       smallest = graph.NO_COLOR + i + 1;
       break;
     }
   }
   // clear
   for (const auto& neighbourIndex : neighbors) {
-    neighboursColors[graph.node(neighbourIndex).color() - 1] = false;
+    neighboursColors[graph[neighbourIndex].color() - 1] = false;
   }
   return smallest;
 }
 
 void greedyColoring(ColoredGraph& graph,
                     const std::vector<size_t> nodesPermut) {
-  graph.washColors();
-  graph.setColorCount(0);
-
   auto iterNodes = nodesPermut.begin();
   if (iterNodes == nodesPermut.end())
     return;  // yeah, my work is done
 
   std::vector<bool> neighboursColors(graph.size(), false);
-  graph.node(*iterNodes).color() = graph.NO_COLOR + 1;
-  graph.setColorCount(1);
+  graph[*iterNodes].color() = graph.NO_COLOR + 1;
+  graph.colorCount() = 1;
 
   for (++iterNodes; iterNodes != nodesPermut.end(); ++iterNodes) {
     // find the smallest unused color
-    graph.node(*iterNodes).color() = findSmallestUnusedColor(
-        graph.node(*iterNodes).transitions(), neighboursColors, graph);
-    if (graph.node(*iterNodes).color() > graph.getColorCount())
+    graph[*iterNodes].color() = findSmallestUnusedColor(
+        graph[*iterNodes].transitions(), neighboursColors, graph);
+    if (graph[*iterNodes].color() > graph.colorCount())
       // we have brand new color here
-      graph.setColorCount(graph.getColorCount() + 1);
+      ++graph.colorCount();
   }
 }
 
@@ -87,17 +84,15 @@ void greedyColoring(ColoredGraph& graph) {
 }
 
 void greedyColoringWithSet(ColoredGraph& graph) {
-  graph.washColors();
-  graph.setColorCount(0);
   for (auto& n : graph) {
     std::set<size_t> neighboursColors;
     for (const auto& neighbourIndex : n.transitions())
-      neighboursColors.insert(graph.node(neighbourIndex).color());
+      neighboursColors.insert(graph[neighbourIndex].color());
 
     // instead of if in for loop we just remove NO_COLOR after
     neighboursColors.erase(graph.NO_COLOR);
 
-    if (neighboursColors.size() < graph.getColorCount()) {
+    if (neighboursColors.size() < graph.colorCount()) {
       // we can recycle smallest unused color
       size_t tryColor =
           graph.NO_COLOR + 1;  // we are starting with smallest possible color
@@ -114,8 +109,8 @@ void greedyColoringWithSet(ColoredGraph& graph) {
       n.color() = tryColor;
     } else {
       // ok, we need a new one
-      graph.setColorCount(graph.getColorCount() + 1);
-      n.color() = graph.getColorCount();
+      ++graph.colorCount();
+      n.color() = graph.colorCount();
     }
   }
 }
@@ -148,8 +143,6 @@ void largestDegreeOrderingColoring(ColoredGraph& graph) {
 }
 
 void incidenceDegreeOrdering(ColoredGraph& graph) {
-  graph.washColors();
-  graph.setColorCount(0);
   if (graph.size() == 0)
     return;  // yeah, my work is done
 
@@ -176,8 +169,8 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   }
 
   // set color to max degree node
-  graph.node(maxDegreeNode).color() = graph.NO_COLOR + 1;
-  graph.setColorCount(1);
+  graph[maxDegreeNode].color() = graph.NO_COLOR + 1;
+  graph.colorCount() = 1;
 
   // delete the colored one
   notColoredNodes.erase(maxDegreeNode);
@@ -188,45 +181,45 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
     // find node with greatest number of colored neighbors
 
     auto iterNode = notColoredNodes.cbegin();
-    size_t theChoosenOne = *iterNode;
+    size_t theChosenOne = *iterNode;
 
-    size_t theChoosenOneColoredNeighborsCnt = 0;
-    for (const auto& edge : graph.node(*iterNode).transitions()) {
-      if (graph.node(edge).color() != graph.NO_COLOR)
-        ++theChoosenOneColoredNeighborsCnt;
+    size_t theChosenOneColoredNeighborsCnt = 0;
+    for (const auto& edge : graph[*iterNode].transitions()) {
+      if (graph[edge].color() != graph.NO_COLOR)
+        ++theChosenOneColoredNeighborsCnt;
     }
 
     for (++iterNode; iterNode != notColoredNodes.cend(); ++iterNode) {
       size_t coloredCnt = 0;
-      for (const auto& edge : graph.node(*iterNode).transitions()) {
-        if (graph.node(edge).color() != graph.NO_COLOR)
+      for (const auto& edge : graph[*iterNode].transitions()) {
+        if (graph[edge].color() != graph.NO_COLOR)
           ++coloredCnt;
       }
 
-      if (coloredCnt > theChoosenOneColoredNeighborsCnt) {
+      if (coloredCnt > theChosenOneColoredNeighborsCnt) {
         // actual node has more colored neighbors
-        theChoosenOne = *iterNode;
-        theChoosenOneColoredNeighborsCnt = coloredCnt;
-      } else if (coloredCnt == theChoosenOneColoredNeighborsCnt &&
-                 nodeDeg[*iterNode] > nodeDeg[theChoosenOne]) {
+        theChosenOne = *iterNode;
+        theChosenOneColoredNeighborsCnt = coloredCnt;
+      } else if (coloredCnt == theChosenOneColoredNeighborsCnt &&
+                 nodeDeg[*iterNode] > nodeDeg[theChosenOne]) {
         // actual node has same number of colored neighbors, but have bigger
         // degree
-        theChoosenOne = *iterNode;
+        theChosenOne = *iterNode;
       }
     }
 
     // we have chosen node
     // now is time to try color
 
-    graph.node(theChoosenOne).color() = findSmallestUnusedColor(
-        graph.node(theChoosenOne).transitions(), neighboursColors, graph);
+    graph[theChosenOne].color() = findSmallestUnusedColor(
+        graph[theChosenOne].transitions(), neighboursColors, graph);
 
-    if (graph.node(theChoosenOne).color() > graph.getColorCount())
+    if (graph[theChosenOne].color() > graph.colorCount())
       // we have brand new color here
-      graph.setColorCount(graph.getColorCount() + 1);
+      ++graph.colorCount();
 
     // ok, the node is now colored
-    notColoredNodes.erase(theChoosenOne);
+    notColoredNodes.erase(theChosenOne);
   }
 }
 

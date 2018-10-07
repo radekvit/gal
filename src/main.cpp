@@ -9,7 +9,8 @@
 #include <iostream>
 #include <memory>
 
-#include "coloring_alg.hpp"
+#include <benchmark.hpp>
+#include "coloring_alg.h"
 #include "graph.hpp"
 
 int main(int argc, char* argv[]) {
@@ -34,12 +35,19 @@ int main(int argc, char* argv[]) {
   }
 
   ColoredGraph graph(*input);
+  for (auto&& b : benchmark<IncidenceDegreeColoring>({"data/g.txt", "data/g2.txt"})) {
+    std::cout << "----\nmin: " << b.min << "\nmax: " << b.max
+              << "\naverage: " << b.average << "\n median: " << b.median
+              << "\n";
+  }
   greedyColoring(graph);
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
+  graph.clearColors();
   largestDegreeOrderingColoring(graph);
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
+  graph.clearColors();
   incidenceDegreeOrdering(graph);
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;

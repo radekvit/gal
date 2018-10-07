@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include <random.h>
+
 class ColoredGraph {
  public:
   class Node;
@@ -23,7 +25,7 @@ class ColoredGraph {
   using iterator = std::vector<Node>::iterator;
   using const_iterator = std::vector<Node>::const_iterator;
 
-  static const size_t NO_COLOR = 0;
+  static constexpr size_t NO_COLOR = 0;
 
   /**
    * Creates graph from vector of vectors of edges.
@@ -35,7 +37,8 @@ class ColoredGraph {
       nodes_.push_back(Node(i, nodes[i], NO_COLOR));
     }
     validateTransitions();
-    convToUndirected();
+    minimizeTransitions();
+    toUndirected();
   }
 
   /**
@@ -69,13 +72,33 @@ class ColoredGraph {
     }
 
     validateTransitions();
-    convToUndirected();
+    minimizeTransitions();
+    toUndirected();
+  }
+
+  ColoredGraph(size_t size, double edgePropability) {
+    for (size_t i = 0; i < size; ++i) {
+      nodes_.push_back(Node(i, {}, NO_COLOR));
+    }
+    // leads to undirected, unique, sorted transitions
+    for (size_t i = 0; i < size; ++i) {
+      for (size_t j = i + 1; j < size; ++j) {
+        if (gal_rand(1.0) < edgePropability) {
+          nodes_[i].transitions_.push_back(j);
+          nodes_[j].transitions_.push_back(i);
+        }
+      }
+    }
   }
 
   ColoredGraph(const ColoredGraph&) = default;
   ColoredGraph(ColoredGraph&&) noexcept = default;
   ColoredGraph& operator=(const ColoredGraph&) = default;
   ColoredGraph& operator=(ColoredGraph&&) noexcept = default;
+
+  static ColoredGraph randomGraph(size_t size, double edgePropability) {
+    return std::move(ColoredGraph(size, edgePropability));
+  }
 
   size_t size() { return nodes_.size(); }
 
@@ -145,90 +168,16 @@ class ColoredGraph {
   };
 
   /**
-   * Color the graph with greedy coloring algorithm.
-   * Source: http://www.new-npac.org/users/fox/pdftotal/sccs-0666.pdf
-   *
-   */
-  void greedyColoring() {
-    washColors();
-    colorCount_ = 0;
-
-    auto iterNodes = (*this).begin();
-    if (iterNodes == (*this).end())
-      return;  // yeah, my work is done
-
-    std::vector<bool> neighboursColors(nodes_.size(), false);
-    (*iterNodes).color() = NO_COLOR + 1;
-    colorCount_ = 1;
-
-    for (++iterNodes; iterNodes != (*this).end(); ++iterNodes) {
-      for (const auto& neighbourIndex : (*iterNodes).transitions()) {
-        if (nodes_[neighbourIndex].color() != NO_COLOR)
-          neighboursColors[nodes_[neighbourIndex].color() - 1] = true;
-      }
-
-      for (size_t i = 0; i < neighboursColors.size(); ++i) {
-        // find the smallest unused color
-        if (neighboursColors[i] == false) {
-          (*iterNodes).color() = NO_COLOR + i + 1;
-          if ((*iterNodes).color() > colorCount_)
-            colorCount_++;  // we have brand new color here
-          break;
-        }
-      }
-      // clear
-      for (const auto& neighbourIndex : (*iterNodes).transitions()) {
-        neighboursColors[nodes_[neighbourIndex].color() - 1] = false;
-      }
-    }
-  }
-  /**
-   * Color the graph with greedy coloring algorithm.
-   */
-  void greedyColoringWithSet() {
-    washColors();
-    colorCount_ = 0;
-    for (auto& n : *this) {
-      std::set<size_t> neighboursColors;
-      for (const auto& neighbourIndex : n.transitions())
-        neighboursColors.insert(nodes_[neighbourIndex].color());
-
-      // instead of if in for loop we just remove NO_COLOR after
-      neighboursColors.erase(NO_COLOR);
-
-      if (neighboursColors.size() < colorCount_) {
-        // we can recycle smallest unused color
-        size_t tryColor =
-            NO_COLOR + 1;  // we are starting with smallest possible color
-        for (size_t usedColor : neighboursColors) {
-          // neighboursColors is order so we can check just difference
-          if (usedColor - tryColor > 0) {
-            // we found the color
-            break;
-          } else {
-            // ok we are moving forward
-            ++tryColor;
-          }
-        }
-        n.color() = tryColor;
-      } else {
-        // ok, we need a new one
-        n.color() = ++colorCount_;
-      }
-    }
-  }
-
-  /**
    * Clears colors from all nodes.
    */
-  void washColors() {
+  void clearColors() {
     for (auto& n : *this)
       n.color_ = NO_COLOR;
+    colorCount_ = 0;
   }
 
-  size_t getColorCount() const { return colorCount_; }
-
-  void setColorCount(size_t colorCount = 0) { colorCount_ = colorCount; }
+  size_t& colorCount() noexcept { return colorCount_; }
+  const size_t& colorCount() const noexcept { return colorCount_; }
 
   /**
    * Checks if graph is colored.
@@ -236,13 +185,15 @@ class ColoredGraph {
    *
    * @return True -> colored. False -> something fishy.
    */
-  bool validateColors(){
-	  for(const auto& node : nodes_){
-		  if(node.color()==NO_COLOR) return false;
-		  for(const auto& edge : node.transitions())
-			  if(nodes_[edge].color()==node.color()) return false;
-	  }
-	  return true;
+  bool validateColors() {
+    for (const auto& node : nodes_) {
+      if (node.color() == NO_COLOR)
+        return false;
+      for (const auto& edge : node.transitions())
+        if (nodes_[edge].color() == node.color())
+          return false;
+    }
+    return true;
   }
 
  private:
@@ -256,14 +207,8 @@ class ColoredGraph {
    */
   void validateTransitions() {
     for (auto&& node : nodes_) {
-      auto&& transitionList = node.transitions_;
-      // sort and limit transitions to at most 1
-      std::sort(transitionList.begin(), transitionList.end());
-      transitionList.erase(
-          std::unique(transitionList.begin(), transitionList.end()),
-          transitionList.end());
       // validate transitions
-      for (auto&& nextNode : transitionList) {
+      for (auto&& nextNode : node.transitions_) {
         if (nextNode >= size()) {
           throw std::invalid_argument("Node transition to nonexistent node.");
         }
@@ -271,30 +216,23 @@ class ColoredGraph {
     }
   }
 
+  void minimizeTransitions() {
+    for (auto&& node : nodes_) {
+      auto&& transitionList = node.transitions_;
+      // sort and limit transitions to at most 1
+      std::sort(transitionList.begin(), transitionList.end());
+      transitionList.erase(
+          std::unique(transitionList.begin(), transitionList.end()),
+          transitionList.end());
+    }
+  }
+
   /**
    * Converts this graph to undirected one.
    */
-  void convToUndirected() {
+  void toUndirected() {
     edgeSymmetrization();
-
-    // ok, now we just remove the loops and edges that are there multiple
-    // times
-    std::map<size_t, size_t> connectedWith;
-    for (auto& node : nodes_)
-      // initialize with id that does not belong to any of the nodes
-      connectedWith[node.id()] = nodes_.size();
-
-    for (auto& node : nodes_) {
-      std::vector<size_t> newEdges;
-      for (auto edge : node.transitions()) {
-        if (connectedWith[edge] != node.id() && edge != node.id()) {
-          newEdges.push_back(edge);
-          connectedWith[edge] = node.id();
-        }
-      }
-
-      node.transitions_.swap(newEdges);
-    }
+    minimizeTransitions();
   }
 
   /**
@@ -302,9 +240,8 @@ class ColoredGraph {
    */
   void edgeSymmetrization() {
     for (auto& node : nodes_) {
-      size_t numOfEdges = node.transitions_.size();  // num of edges on the
-                                                     // start
-      for (size_t i = 0; i < numOfEdges; ++i) {
+      // num of edges on the start
+      for (size_t i : node.transitions()) {
         if (node.transitions_[i] < nodes_.size()) {
           // original edge
           if (node.id() < node.transitions_[i]) {

@@ -16,6 +16,8 @@
 #include <vector>
 #include "graph.hpp"
 
+inline constexpr size_t ALGORITHM_COUNT = 4;
+
 /**
  * Is greedy coloring algorithm with adjustable node permutation.
  * Source: http://www.new-npac.org/users/fox/pdftotal/sccs-0666.pdf
@@ -58,6 +60,34 @@ void largestDegreeOrderingColoring(ColoredGraph& graph);
  * @param[in|out] graph you want to color.
  */
 void incidenceDegreeOrdering(ColoredGraph& graph);
+
+class GreedyColoring {
+ public:
+  static void color(ColoredGraph& graph) noexcept {
+    return greedyColoring(graph);
+  }
+};
+
+class GreedyColoringWithSet {
+ public:
+  static void color(ColoredGraph& graph) noexcept {
+    return greedyColoringWithSet(graph);
+  }
+};
+
+class LargestDegreeOrderingColoring {
+ public:
+  static void color(ColoredGraph& graph) noexcept {
+    return largestDegreeOrderingColoring(graph);
+  }
+};
+
+class IncidenceDegreeColoring {
+ public:
+  static void color(ColoredGraph& graph) noexcept {
+    return incidenceDegreeOrdering(graph);
+  }
+};
 
 #endif /* SRC_COLORING_ALG_HPP_ */
 
