@@ -14,6 +14,7 @@
 #include "graph.hpp"
 
 int main(int argc, char* argv[]) {
+#if 0
   std::istream* input = &std::cin;  // we register cin as default input
   std::ifstream fileStream;
 
@@ -35,11 +36,7 @@ int main(int argc, char* argv[]) {
   }
 
   ColoredGraph graph(*input);
-  for (auto&& b : benchmark<IncidenceDegreeColoring>({"data/g.txt", "data/g2.txt"})) {
-    std::cout << "----\nmin: " << b.min << "\nmax: " << b.max
-              << "\naverage: " << b.average << "\n median: " << b.median
-              << "\n";
-  }
+
   greedyColoring(graph);
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
@@ -51,6 +48,13 @@ int main(int argc, char* argv[]) {
   incidenceDegreeOrdering(graph);
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
+#endif
+  for (auto&& b : benchmark<IncidenceDegreeColoring>(
+           std::vector<ColoredGraph>{{10, 0.5}, {100, 0.5}, {200, 0.5}, {300, 0.5}})) {
+    std::cout << "----\nsum:     " << b.sum << "\nmin:     " << b.min << "\nmax:     " << b.max
+              << "\naverage: " << b.average << "\nmedian:  " << b.median
+              << "\n";
+  }
 
   return 0;
 }

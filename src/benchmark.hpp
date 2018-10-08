@@ -10,7 +10,7 @@
 #include "coloring_alg.h"
 #include "graph.hpp"
 
-inline constexpr size_t BENCHMARK_ITERATIONS = 1;
+inline constexpr size_t BENCHMARK_ITERATIONS = 51;
 
 struct BenchmarkResult {
   double sum = 0.0;
@@ -36,16 +36,27 @@ struct BenchmarkResult {
 template <typename CG>
 inline std::vector<BenchmarkResult> benchmark(
     const std::vector<std::string>& graphFilenames) {
-  using namespace std::chrono;
-  std::vector<BenchmarkResult> results;
-	results.reserve(graphFilenames.size());
+  std::vector<ColoredGraph> graphs{};
 
   for (auto&& filename : graphFilenames) {
+    std::ifstream is(filename);
+    graphs.push_back({is});
+  }
+
+  return std::move(benchmark<CG>(std::move(graphs)));
+}
+
+template <typename CG>
+inline std::vector<BenchmarkResult> benchmark(
+    std::vector<ColoredGraph> graphs) {
+  using namespace std::chrono;
+  std::vector<BenchmarkResult> results;
+  std::array<double, BENCHMARK_ITERATIONS> timeArray{};
+  results.reserve(graphs.size());
+
+  for (auto&& g : graphs) {
     results.push_back({});
     auto&& result = results.back();
-    std::ifstream is(filename);
-    ColoredGraph g(is);
-    std::array<double, BENCHMARK_ITERATIONS> timeArray{};
 
     for (size_t i = 0; i < BENCHMARK_ITERATIONS; ++i) {
       g.clearColors();
@@ -57,7 +68,7 @@ inline std::vector<BenchmarkResult> benchmark(
     }
     result.set(timeArray);
   }
-	return results;
+  return std::move(results);
 }
 
 #endif
