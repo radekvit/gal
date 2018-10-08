@@ -241,7 +241,8 @@ class ColoredGraph {
   void edgeSymmetrization() {
     for (auto& node : nodes_) {
       // num of edges on the start
-      for (size_t i : node.transitions()) {
+      size_t numOfEdges = node.transitions_.size();
+      for (size_t i = 0; i < numOfEdges; ++i) {
         if (node.transitions_[i] < nodes_.size()) {
           // original edge
           if (node.id() < node.transitions_[i]) {
