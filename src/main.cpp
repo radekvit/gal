@@ -49,11 +49,11 @@ int main(int argc, char* argv[]) {
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
 #endif
-  for (auto&& b : benchmark<IncidenceDegreeColoring>(
-           std::vector<ColoredGraph>{{10, 0.5}, {100, 0.5}, {200, 0.5}, {300, 0.5}})) {
-    std::cout << "----\nsum:     " << b.sum << "\nmin:     " << b.min << "\nmax:     " << b.max
-              << "\naverage: " << b.average << "\nmedian:  " << b.median
-              << "\n";
+  for (auto&& b : benchmark<IncidenceDegreeColoring>(std::vector<ColoredGraph>{
+           {10, 0.5}, {100, 0.5}, {200, 0.5}, {300, 0.5}})) {
+    std::cout << "----\nsum:     " << b.sum << "\nmin:     " << b.min
+              << "\nmax:     " << b.max << "\naverage: " << b.average
+              << "\nmedian:  " << b.median << "\n";
   }
 
   return 0;
