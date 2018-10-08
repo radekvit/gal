@@ -45,7 +45,8 @@ size_t findSmallestUnusedColor(const std::vector<size_t>& neighbors,
   }
   // clear
   for (const auto& neighbourIndex : neighbors) {
-    neighboursColors[graph[neighbourIndex].color() - 1] = false;
+    if (graph[neighbourIndex].color() != graph.NO_COLOR)
+      neighboursColors[graph[neighbourIndex].color() - 1] = false;
   }
   return smallest;
 }
@@ -155,7 +156,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   // map Node -> degree
   // + selecting of max degree node
 
-  std::map<size_t, size_t> nodeDeg;
+  std::vector<size_t> nodeDeg(graph.size());
   size_t maxDegreeNode = 0;
   size_t maxDegree = 0;
 
