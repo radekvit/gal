@@ -232,7 +232,18 @@ class ColoredGraph {
    */
   void toUndirected() {
     edgeSymmetrization();
-    minimizeTransitions();
+    // remove the loops and edges that are there multiple times
+    std::vector<size_t> connectedWith(nodes_.size(), nodes_.size());
+    for (auto& node : nodes_) {
+      std::vector<size_t> newEdges;
+      for (auto edge : node.transitions()) {
+        if (connectedWith[edge] != node.id() && edge != node.id()) {
+          newEdges.push_back(edge);
+          connectedWith[edge] = node.id();
+        }
+      }
+      node.transitions_.swap(newEdges);
+    }
   }
 
   /**
