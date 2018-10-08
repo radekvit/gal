@@ -13,6 +13,7 @@
 inline constexpr size_t BENCHMARK_ITERATIONS = 1;
 
 struct BenchmarkResult {
+  double sum = 0.0;
   double min = 0.0;
   double max = 0.0;
   double average = 0.0;
@@ -26,7 +27,8 @@ struct BenchmarkResult {
     std::sort(a.begin(), a.end());
     min = a.front();
     max = a.back();
-    average = std::accumulate(a.begin(), a.end(), 0.0) / a.size();
+    sum = std::accumulate(a.begin(), a.end(), 0.0);
+    average = sum / a.size();
     median = a[a.size() / 2];
   }
 };
