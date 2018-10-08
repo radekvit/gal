@@ -9,7 +9,6 @@
 #include "coloring_alg.h"
 
 #include <algorithm>
-#include <map>
 #include <set>
 #include <tuple>
 #include <unordered_set>

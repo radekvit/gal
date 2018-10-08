@@ -49,9 +49,30 @@ int main(int argc, char* argv[]) {
   std::cout << graph;
   std::cout << "Valid: " << graph.validateColors() << std::endl;
 #endif
-  for (auto&& b : benchmark<IncidenceDegreeColoring>(std::vector<ColoredGraph>{
-           {10, 0.5}, {100, 0.5}, {200, 0.5}, {300, 0.5}})) {
-    std::cout << "----\nsum:     " << b.sum << "\nmin:     " << b.min
+  std::vector<ColoredGraph> test{
+      {100, 0.5}, {200, 0.5}, {300, 0.5}, {400, 0.5}, {1000, 0.5}};
+
+  std::cout << "Greedy Coloring\n";
+  for (auto&& b : benchmark<GreedyColoring>(test)) {
+    std::cout << "----\nresult valid:     " << b.resultValid
+              << "\nnumber of colors: " << b.colorCount
+              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
+              << "\nmax:     " << b.max << "\naverage: " << b.average
+              << "\nmedian:  " << b.median << "\n";
+  }
+  std::cout << "Largest Degree Ordering Coloring\n";
+  for (auto&& b : benchmark<LargestDegreeOrderingColoring>(test)) {
+    std::cout << "----\nresult valid:     " << b.resultValid
+              << "\nnumber of colors: " << b.colorCount
+              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
+              << "\nmax:     " << b.max << "\naverage: " << b.average
+              << "\nmedian:  " << b.median << "\n";
+  }
+  std::cout << "Incidence Degree Coloring\n";
+  for (auto&& b : benchmark<IncidenceDegreeColoring>(test)) {
+    std::cout << "----\nresult valid:     " << b.resultValid
+              << "\nnumber of colors: " << b.colorCount
+              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
               << "\nmax:     " << b.max << "\naverage: " << b.average
               << "\nmedian:  " << b.median << "\n";
   }

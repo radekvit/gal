@@ -19,8 +19,11 @@ struct BenchmarkResult {
   double average = 0.0;
   double median = 0.0;
 
+  bool resultValid;
+  size_t colorCount;
+
   template <size_t i>
-  void set(std::array<double, i>& a) {
+  void set(std::array<double, i>& a, const ColoredGraph& g) {
     static_assert(i != 0,
                   "Benchmark results must be set with an array larger than 0.");
 
@@ -30,6 +33,9 @@ struct BenchmarkResult {
     sum = std::accumulate(a.begin(), a.end(), 0.0);
     average = sum / a.size();
     median = a[a.size() / 2];
+
+    resultValid = g.validateColors();
+    colorCount = g.colorCount();
   }
 };
 
@@ -66,7 +72,9 @@ inline std::vector<BenchmarkResult> benchmark(
       double time = duration<double, std::milli>(end - begin).count();
       timeArray[i] = time;
     }
-    result.set(timeArray);
+    g.clearColors();
+    CG::color(g);
+    result.set(timeArray, g);
   }
   return std::move(results);
 }

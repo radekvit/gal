@@ -185,7 +185,7 @@ class ColoredGraph {
    *
    * @return True -> colored. False -> something fishy.
    */
-  bool validateColors() {
+  bool validateColors() const {
     for (const auto& node : nodes_) {
       if (node.color() == NO_COLOR)
         return false;
