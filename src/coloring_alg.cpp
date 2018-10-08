@@ -152,6 +152,8 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   for (const auto& node : graph)
     notColoredNodes.insert(node.id());
 
+  std::vector<size_t> numberOfColoredNeighbors(graph.size(), 0);
+
   // map Node -> degree
   // + selecting of max degree node
 
@@ -174,6 +176,9 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
 
   // delete the colored one
   notColoredNodes.erase(maxDegreeNode);
+  // update neighbors colors
+  for (const auto& edge : graph[maxDegreeNode].transitions())
+    ++numberOfColoredNeighbors[edge];
 
   std::vector<bool> neighboursColors(graph.size(), false);
 
@@ -183,24 +188,18 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
     auto iterNode = notColoredNodes.cbegin();
     size_t theChosenOne = *iterNode;
 
-    size_t theChosenOneColoredNeighborsCnt = 0;
-    for (const auto& edge : graph[*iterNode].transitions()) {
-      if (graph[edge].color() != graph.NO_COLOR)
-        ++theChosenOneColoredNeighborsCnt;
-    }
+    size_t theChosenOneColoredNeighborsCnt =
+        numberOfColoredNeighbors[*iterNode];
 
     for (++iterNode; iterNode != notColoredNodes.cend(); ++iterNode) {
-      size_t coloredCnt = 0;
-      for (const auto& edge : graph[*iterNode].transitions()) {
-        if (graph[edge].color() != graph.NO_COLOR)
-          ++coloredCnt;
-      }
-
-      if (coloredCnt > theChosenOneColoredNeighborsCnt) {
+      if (numberOfColoredNeighbors[*iterNode] >
+          theChosenOneColoredNeighborsCnt) {
         // actual node has more colored neighbors
         theChosenOne = *iterNode;
-        theChosenOneColoredNeighborsCnt = coloredCnt;
-      } else if (coloredCnt == theChosenOneColoredNeighborsCnt &&
+        theChosenOneColoredNeighborsCnt = numberOfColoredNeighbors[*iterNode];
+
+      } else if (numberOfColoredNeighbors[*iterNode] ==
+                     theChosenOneColoredNeighborsCnt &&
                  nodeDeg[*iterNode] > nodeDeg[theChosenOne]) {
         // actual node has same number of colored neighbors, but have bigger
         // degree
@@ -220,6 +219,9 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
 
     // ok, the node is now colored
     notColoredNodes.erase(theChosenOne);
+    // update neighbors colors
+    for (const auto& edge : graph[maxDegreeNode].transitions())
+      ++numberOfColoredNeighbors[edge];
   }
 }
 
