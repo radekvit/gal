@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
+#include <cassert>
 #include "coloring_alg.h"
 #include "graph.hpp"
-#include <cassert>
 
 inline constexpr size_t BENCHMARK_ITERATIONS = 11;
 
@@ -44,7 +44,8 @@ struct BenchmarkResult {
 };
 
 /**
- * Benchmark a set of graphs given by filenames. The algorithm class is given in the template argument.
+ * Benchmark a set of graphs given by filenames. The algorithm class is given in
+ * the template argument.
  */
 template <typename CG>
 inline std::vector<BenchmarkResult> benchmark(
@@ -60,7 +61,8 @@ inline std::vector<BenchmarkResult> benchmark(
 }
 
 /**
- * Benchmark a vector of graphs. The algorithm class is given in the tepmlate argument.
+ * Benchmark a vector of graphs. The algorithm class is given in the tepmlate
+ * argument.
  */
 template <typename CG>
 inline std::vector<BenchmarkResult> benchmark(

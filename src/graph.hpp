@@ -81,12 +81,14 @@ class ColoredGraph {
 
   /**
    * Generate a random graph.
-   * 
+   *
    * @param size The number of nodes.
    * @param edgePropability The propability of an edge between two nodes.
    * @param limit The optional upper limit for the number of edges.
    */
-  ColoredGraph(size_t size, double edgePropability, size_t limit = std::numeric_limits<size_t>::max()) {
+  ColoredGraph(size_t size,
+               double edgePropability,
+               size_t limit = std::numeric_limits<size_t>::max()) {
     for (size_t i = 0; i < size; ++i) {
       nodes_.push_back(Node(i, {}, NO_COLOR));
     }
@@ -113,7 +115,10 @@ class ColoredGraph {
    * @param edgePropability The propability of an edge between two nodes.
    * @param limit The optional upper limit for the number of edges.
    */
-  static ColoredGraph randomGraph(size_t size, double edgePropability, size_t limit = std::numeric_limits<size_t>::max()) {
+  static ColoredGraph randomGraph(
+      size_t size,
+      double edgePropability,
+      size_t limit = std::numeric_limits<size_t>::max()) {
     return std::move(ColoredGraph(size, edgePropability, limit));
   }
 
