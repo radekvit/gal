@@ -9,8 +9,9 @@
 
 #include "coloring_alg.h"
 #include "graph.hpp"
+#include <cassert>
 
-inline constexpr size_t BENCHMARK_ITERATIONS = 51;
+inline constexpr size_t BENCHMARK_ITERATIONS = 11;
 
 struct BenchmarkResult {
   double sum = 0.0;
@@ -22,23 +23,29 @@ struct BenchmarkResult {
   bool resultValid;
   size_t colorCount;
 
-  template <size_t i>
-  void set(std::array<double, i>& a, const ColoredGraph& g) {
-    static_assert(i != 0,
-                  "Benchmark results must be set with an array larger than 0.");
+  /**\
+   * Set the benchmark results from a range of measurements.
+   */
+  template <typename Iterator>
+  void set(Iterator begin, Iterator end, const ColoredGraph& g) {
+    size_t size = end - begin;
+    assert(size != 0);
 
-    std::sort(a.begin(), a.end());
-    min = a.front();
-    max = a.back();
-    sum = std::accumulate(a.begin(), a.end(), 0.0);
-    average = sum / a.size();
-    median = a[a.size() / 2];
+    std::sort(begin, end);
+    min = *(end - 1);
+    max = *begin;
+    sum = std::accumulate(begin, end, 0.0);
+    average = sum / size;
+    median = *(begin + size / 2);
 
     resultValid = g.validateColors();
     colorCount = g.colorCount();
   }
 };
 
+/**
+ * Benchmark a set of graphs given by filenames. The algorithm class is given in the template argument.
+ */
 template <typename CG>
 inline std::vector<BenchmarkResult> benchmark(
     const std::vector<std::string>& graphFilenames) {
@@ -52,6 +59,9 @@ inline std::vector<BenchmarkResult> benchmark(
   return std::move(benchmark<CG>(std::move(graphs)));
 }
 
+/**
+ * Benchmark a vector of graphs. The algorithm class is given in the tepmlate argument.
+ */
 template <typename CG>
 inline std::vector<BenchmarkResult> benchmark(
     std::vector<ColoredGraph> graphs) {
@@ -74,7 +84,7 @@ inline std::vector<BenchmarkResult> benchmark(
     }
     g.clearColors();
     CG::color(g);
-    result.set(timeArray, g);
+    result.set(timeArray.begin(), timeArray.end(), g);
   }
   return std::move(results);
 }

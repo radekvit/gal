@@ -18,6 +18,9 @@
 
 #include <random.h>
 
+/**
+ * Unoriented, colored graph.
+ */
 class ColoredGraph {
  public:
   class Node;
@@ -76,16 +79,24 @@ class ColoredGraph {
     toUndirected();
   }
 
-  ColoredGraph(size_t size, double edgePropability) {
+  /**
+   * Generate a random graph.
+   * 
+   * @param size The number of nodes.
+   * @param edgePropability The propability of an edge between two nodes.
+   * @param limit The optional upper limit for the number of edges.
+   */
+  ColoredGraph(size_t size, double edgePropability, size_t limit = std::numeric_limits<size_t>::max()) {
     for (size_t i = 0; i < size; ++i) {
       nodes_.push_back(Node(i, {}, NO_COLOR));
     }
     // leads to undirected, unique, sorted transitions
     for (size_t i = 0; i < size; ++i) {
       for (size_t j = i + 1; j < size; ++j) {
-        if (gal_rand(1.0) < edgePropability) {
+        if (gal_rand(1.0) < edgePropability && limit != 0) {
           nodes_[i].transitions_.push_back(j);
           nodes_[j].transitions_.push_back(i);
+          --limit;
         }
       }
     }
@@ -96,8 +107,14 @@ class ColoredGraph {
   ColoredGraph& operator=(const ColoredGraph&) = default;
   ColoredGraph& operator=(ColoredGraph&&) noexcept = default;
 
-  static ColoredGraph randomGraph(size_t size, double edgePropability) {
-    return std::move(ColoredGraph(size, edgePropability));
+  /**
+   * Create a random graph.
+   * @param size The number of nodes.
+   * @param edgePropability The propability of an edge between two nodes.
+   * @param limit The optional upper limit for the number of edges.
+   */
+  static ColoredGraph randomGraph(size_t size, double edgePropability, size_t limit = std::numeric_limits<size_t>::max()) {
+    return std::move(ColoredGraph(size, edgePropability, limit));
   }
 
   size_t size() { return nodes_.size(); }
@@ -108,17 +125,20 @@ class ColoredGraph {
   const_iterator begin() const { return nodes_.cbegin(); }
   const_iterator end() const { return nodes_.cend(); }
 
+  /**
+   * Get the Nth node.
+   */
+  Node& operator[](size_t i) noexcept { return nodes_[i]; }
   Node& node(size_t i) noexcept { return nodes_[i]; }
-  Node& operator[](size_t i) noexcept { return node(i); }
 
+  const Node& operator[](size_t i) const noexcept { return nodes_[i]; }
   const Node& node(size_t i) const noexcept { return nodes_[i]; }
-  const Node& operator[](size_t i) const noexcept { return node(i); }
 
   /**
-   * Prints graph to ostream.
+   * Prints graph to ostream in the same format it's read in the constructor.
    *
-   * @param[in] os	Stream the graph will be printed to.
-   * @param[in] g	Graph for printing.
+   * @param[in] os Stream the graph will be printed to.
+   * @param[in] g Graph for printing.
    * @return the stream
    */
   friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g) {
@@ -153,6 +173,9 @@ class ColoredGraph {
       return transitions_;
     }
 
+    /**
+     * Returns true if this node has a transition to a different node.
+     */
     bool transitionsTo(size_t i) noexcept {
       auto it = std::lower_bound(transitions_.begin(), transitions_.end(), i);
       return it != transitions_.end() && *it == i;
@@ -215,7 +238,9 @@ class ColoredGraph {
       }
     }
   }
-
+  /**
+   * Transforms the transition lists of all nodes to unique sorted lists.
+   */
   void minimizeTransitions() {
     for (auto&& node : nodes_) {
       auto&& transitionList = node.transitions_;
@@ -228,7 +253,7 @@ class ColoredGraph {
   }
 
   /**
-   * Converts this graph to undirected one.
+   * Converts the directed graph to an undirected one.
    */
   void toUndirected() {
     edgeSymmetrization();
@@ -247,7 +272,7 @@ class ColoredGraph {
   }
 
   /**
-   * Performs symmetrization of edges.
+   * Performs the symmetrization of edges.
    */
   void edgeSymmetrization() {
     for (auto& node : nodes_) {
