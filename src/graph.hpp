@@ -140,7 +140,7 @@ class ColoredGraph {
   const Node& node(size_t i) const noexcept { return nodes_[i]; }
 
   /**
-   * Prints graph to ostream in the same format it's read in the constructor.
+   * Prints graph to ostream.
    *
    * @param[in] os Stream the graph will be printed to.
    * @param[in] g Graph for printing.
@@ -161,6 +161,26 @@ class ColoredGraph {
       os << "\n";
     }
     return os;
+  }
+  /**
+   * Prints graph to ostream in the same format it's read in the constructor.
+   * (So without colors.)
+   *
+   * @param[out] os Stream the graph will be printed to.
+   */
+  void print(std::ostream& os) {
+    for (const auto& node : nodes_) {
+      auto&& transitions = node.transitions();
+      auto it = transitions.begin();
+
+      if (it != transitions.end()) {
+        os << *it++;
+      }
+      while (it != transitions.end()) {
+        os << " " << *it++;
+      }
+      os << "\n";
+    }
   }
 
   class Node {
