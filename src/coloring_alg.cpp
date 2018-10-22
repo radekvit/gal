@@ -149,8 +149,6 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   // create set with not colored nodes
   std::unordered_set<size_t> notColoredNodes;
   notColoredNodes.reserve(graph.size());
-  for (const auto& node : graph)
-    notColoredNodes.insert(node.id());
 
   std::vector<size_t> numberOfColoredNeighbors(graph.size(), 0);
 
@@ -162,6 +160,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   size_t maxDegree = 0;
 
   for (const auto& node : graph) {
+    notColoredNodes.insert(node.id());
     size_t degree = node.transitions().size();
     nodeDeg[node.id()] = degree;
     if (degree > maxDegree) {
