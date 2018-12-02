@@ -11,7 +11,7 @@
 #include "coloring_alg.h"
 #include "graph.hpp"
 
-inline constexpr size_t BENCHMARK_ITERATIONS = 11;
+inline constexpr size_t BENCHMARK_ITERATIONS = 5;
 
 struct BenchmarkResult {
   double sum = 0.0;
@@ -83,6 +83,9 @@ inline std::vector<BenchmarkResult> benchmark(
       auto end = steady_clock::now();
       double time = duration<double, std::milli>(end - begin).count();
       timeArray[i] = time;
+    }
+    if (!g.validateColors()) {
+      std::cerr << "error: coloring not valid.\n";
     }
     g.clearColors();
     CG::color(g);

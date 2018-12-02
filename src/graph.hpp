@@ -39,8 +39,8 @@ class ColoredGraph {
     for (size_t i = 0; i < nodes.size(); ++i) {
       nodes_.push_back(Node(i, nodes[i], NO_COLOR));
     }
-    validateTransitions();
-    minimizeTransitions();
+    validateEdges();
+    minimizeEdges();
     toUndirected();
   }
 
@@ -69,13 +69,13 @@ class ColoredGraph {
 
       size_t edge;
       while (lineIss >> edge)
-        nodes_.back().transitions_.push_back(edge);
+        nodes_.back().edges_.push_back(edge);
 
       ++id;
     }
 
-    validateTransitions();
-    minimizeTransitions();
+    validateEdges();
+    minimizeEdges();
     toUndirected();
   }
 
@@ -92,12 +92,12 @@ class ColoredGraph {
     for (size_t i = 0; i < size; ++i) {
       nodes_.push_back(Node(i, {}, NO_COLOR));
     }
-    // leads to undirected, unique, sorted transitions
+    // leads to undirected, unique, sorted edges
     for (size_t i = 0; i < size; ++i) {
       for (size_t j = i + 1; j < size; ++j) {
         if (gal_rand(1.0) < edgePropability && limit != 0) {
-          nodes_[i].transitions_.push_back(j);
-          nodes_[j].transitions_.push_back(i);
+          nodes_[i].edges_.push_back(j);
+          nodes_[j].edges_.push_back(i);
           --limit;
         }
       }
@@ -123,6 +123,13 @@ class ColoredGraph {
   }
 
   size_t size() { return nodes_.size(); }
+  size_t edgeCount() {
+    size_t s = 0;
+    for (auto&& node : nodes_) {
+      s += node.edges().size();
+    }
+    return s;
+  }
 
   iterator begin() { return nodes_.begin(); }
   iterator end() { return nodes_.end(); }
@@ -139,6 +146,23 @@ class ColoredGraph {
   const Node& operator[](size_t i) const noexcept { return nodes_[i]; }
   const Node& node(size_t i) const noexcept { return nodes_[i]; }
 
+  bool insertEdge(size_t a, size_t b) {
+    if (a == b || a >= size() || b >= size()) {
+      return false;
+    }
+    auto&& n1 = node(a);
+    auto&& n2 = node(b);
+    if (n1.edgeTo(b)) {
+      return false;
+    }
+    auto it = std::lower_bound(n1.edges_.begin(), n1.edges_.end(), b);
+    n1.edges_.insert(it, b);
+    it = std::lower_bound(n2.edges_.begin(), n2.edges_.end(), a);
+    n2.edges_.insert(it, a);
+
+    return true;
+  }
+
   /**
    * Prints graph to ostream.
    *
@@ -149,13 +173,13 @@ class ColoredGraph {
   friend std::ostream& operator<<(std::ostream& os, const ColoredGraph& g) {
     for (const auto& node : g.nodes_) {
       os << node.id() << ") color: " << node.color() << ", edges: ";
-      auto&& transitions = node.transitions();
-      auto it = transitions.begin();
+      auto&& edges = node.edges();
+      auto it = edges.begin();
 
-      if (it != transitions.end()) {
+      if (it != edges.end()) {
         os << *it++;
       }
-      while (it != transitions.end()) {
+      while (it != edges.end()) {
         os << " " << *it++;
       }
       os << "\n";
@@ -170,13 +194,13 @@ class ColoredGraph {
    */
   void print(std::ostream& os) {
     for (const auto& node : nodes_) {
-      auto&& transitions = node.transitions();
-      auto it = transitions.begin();
+      auto&& edges = node.edges();
+      auto it = edges.begin();
 
-      if (it != transitions.end()) {
+      if (it != edges.end()) {
         os << *it++;
       }
-      while (it != transitions.end()) {
+      while (it != edges.end()) {
         os << " " << *it++;
       }
       os << "\n";
@@ -186,24 +210,20 @@ class ColoredGraph {
   class Node {
    public:
     friend class ColoredGraph;
-    Node(size_t id,
-         const std::vector<size_t>& transitions,
-         size_t color) noexcept
-        : id_(id), transitions_(transitions), color_(color) {}
+    Node(size_t id, const std::vector<size_t>& edges, size_t color) noexcept
+        : id_(id), edges_(edges), color_(color) {}
 
     size_t id() const noexcept { return id_; }
     explicit operator size_t() const noexcept { return id(); }
 
-    const std::vector<size_t>& transitions() const noexcept {
-      return transitions_;
-    }
+    const std::vector<size_t>& edges() const noexcept { return edges_; }
 
     /**
      * Returns true if this node has a transition to a different node.
      */
-    bool transitionsTo(size_t i) noexcept {
-      auto it = std::lower_bound(transitions_.begin(), transitions_.end(), i);
-      return it != transitions_.end() && *it == i;
+    bool edgeTo(size_t i) noexcept {
+      auto it = std::lower_bound(edges_.begin(), edges_.end(), i);
+      return it != edges_.end() && *it == i;
     }
 
     size_t color() const noexcept { return color_; }
@@ -211,7 +231,7 @@ class ColoredGraph {
 
    private:
     size_t id_;
-    std::vector<size_t> transitions_;
+    std::vector<size_t> edges_;
     size_t color_;
   };
 
@@ -237,7 +257,7 @@ class ColoredGraph {
     for (const auto& node : nodes_) {
       if (node.color() == NO_COLOR)
         return false;
-      for (const auto& edge : node.transitions())
+      for (const auto& edge : node.edges())
         if (nodes_[edge].color() == node.color())
           return false;
     }
@@ -253,10 +273,10 @@ class ColoredGraph {
    *
    * @throw invalid_argument	When node have transition to nonexistent node.
    */
-  void validateTransitions() {
+  void validateEdges() {
     for (auto&& node : nodes_) {
-      // validate transitions
-      for (auto&& nextNode : node.transitions_) {
+      // validate edges
+      for (auto&& nextNode : node.edges_) {
         if (nextNode >= size()) {
           throw std::invalid_argument("Node transition to nonexistent node.");
         }
@@ -266,10 +286,10 @@ class ColoredGraph {
   /**
    * Transforms the transition lists of all nodes to unique sorted lists.
    */
-  void minimizeTransitions() {
+  void minimizeEdges() {
     for (auto&& node : nodes_) {
-      auto&& transitionList = node.transitions_;
-      // sort and limit transitions to at most 1
+      auto&& transitionList = node.edges_;
+      // sort and limit edges to at most 1
       std::sort(transitionList.begin(), transitionList.end());
       transitionList.erase(
           std::unique(transitionList.begin(), transitionList.end()),
@@ -286,13 +306,13 @@ class ColoredGraph {
     std::vector<size_t> connectedWith(nodes_.size(), nodes_.size());
     for (auto& node : nodes_) {
       std::vector<size_t> newEdges;
-      for (auto edge : node.transitions()) {
+      for (auto edge : node.edges()) {
         if (connectedWith[edge] != node.id() && edge != node.id()) {
           newEdges.push_back(edge);
           connectedWith[edge] = node.id();
         }
       }
-      node.transitions_.swap(newEdges);
+      node.edges_.swap(newEdges);
     }
   }
 
@@ -302,22 +322,21 @@ class ColoredGraph {
   void edgeSymmetrization() {
     for (auto& node : nodes_) {
       // num of edges on the start
-      size_t numOfEdges = node.transitions_.size();
+      size_t numOfEdges = node.edges_.size();
       for (size_t i = 0; i < numOfEdges; ++i) {
-        if (node.transitions_[i] < nodes_.size()) {
+        if (node.edges_[i] < nodes_.size()) {
           // original edge
-          if (node.id() < node.transitions_[i]) {
+          if (node.id() < node.edges_[i]) {
             // needs marking because of future processing
-            nodes_[node.transitions_[i]].transitions_.push_back(nodes_.size() +
-                                                                node.id());
+            nodes_[node.edges_[i]].edges_.push_back(nodes_.size() + node.id());
           } else {
             // no need for, mark because the node was already processed
-            nodes_[node.transitions_[i]].transitions_.push_back(node.id());
+            nodes_[node.edges_[i]].edges_.push_back(node.id());
           }
         } else {
           // this edge was symmetrized
           // lets remove the mark
-          node.transitions_[i] -= nodes_.size();
+          node.edges_[i] -= nodes_.size();
         }
       }
     }

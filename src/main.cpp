@@ -14,69 +14,48 @@
 #include "graph.hpp"
 
 int main(int argc, char* argv[]) {
-#if 0
-  std::istream* input = &std::cin;  // we register cin as default input
-  std::ifstream fileStream;
-
-  if (argc > 2) {
-    std::cerr << "This program is expecting at most one argument with path to "
-                 "file containing graph. If you run without arguments, than "
-                 "graph is expected on stdin."
-              << std::endl;
-    return 1;
-  } else if (argc == 2) {
-    // user wants to read graph from given file
-    fileStream.open(argv[1]);
-    if (fileStream) {
-      input = &fileStream;
-    } else {
-      std::cerr << "Can not open " << argv[1] << " for reading." << std::endl;
-      return 2;
+  if (argc < 3) {
+    std::cerr << "Usage:\n"
+                 "./gal2018 input.txt [input2.txt ...] output.csv\n"
+                 "This program produces a csv file with benchmarks for:"
+                 "greedy coloring\nlargest degree ordering coloring\nincidence "
+                 "degree coloring\n";
+    if (argc == 2 && std::string(argv[1]) == "--help") {
+      return 0;
     }
+    return 1;
   }
-
-  ColoredGraph graph(*input);
-
-  greedyColoring(graph);
-  std::cout << graph;
-  std::cout << "Valid: " << graph.validateColors() << std::endl;
-  graph.clearColors();
-  largestDegreeOrderingColoring(graph);
-  std::cout << graph;
-  std::cout << "Valid: " << graph.validateColors() << std::endl;
-  graph.clearColors();
-  incidenceDegreeOrdering(graph);
-  std::cout << graph;
-  std::cout << "Valid: " << graph.validateColors() << std::endl;
-#endif
-  std::vector<ColoredGraph> test{
-      {100, 0.5}, {200, 0.5}, {300, 0.5}, {400, 0.5}, {1000, 0.5}};
+  // load graphs from files
+  std::vector<std::string> testNames;
+  std::vector<ColoredGraph> test;
+  for (int i = 1; i < argc - 1; ++i) {
+    std::ifstream fileStream(argv[i]);
+    if (!fileStream) {
+      std::cerr << "Can not open " << argv[i] << " for reading.\n";
+      continue;
+    }
+    test.push_back(ColoredGraph(fileStream));
+    testNames.push_back(argv[i]);
+  }
 
   std::cout << "Greedy Coloring\n";
-  for (auto&& b : benchmark<GreedyColoring>(test)) {
-    std::cout << "----\nresult valid:     " << b.resultValid
-              << "\nnumber of colors: " << b.colorCount
-              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
-              << "\nmax:     " << b.max << "\naverage: " << b.average
-              << "\nmedian:  " << b.median << "\n";
-  }
+  auto greedyResults = benchmark<GreedyColoring>(test);
   std::cout << "Largest Degree Ordering Coloring\n";
-  for (auto&& b : benchmark<LargestDegreeOrderingColoring>(test)) {
-    std::cout << "----\nresult valid:     " << b.resultValid
-              << "\nnumber of colors: " << b.colorCount
-              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
-              << "\nmax:     " << b.max << "\naverage: " << b.average
-              << "\nmedian:  " << b.median << "\n";
-  }
+  auto ldocResults = benchmark<LargestDegreeOrderingColoring>(test);
   std::cout << "Incidence Degree Coloring\n";
-  for (auto&& b : benchmark<IncidenceDegreeColoring>(test)) {
-    std::cout << "----\nresult valid:     " << b.resultValid
-              << "\nnumber of colors: " << b.colorCount
-              << "\n----\nsum:     " << b.sum << "\nmin:     " << b.min
-              << "\nmax:     " << b.max << "\naverage: " << b.average
-              << "\nmedian:  " << b.median << "\n";
-  }
+  auto idcResults = benchmark<IncidenceDegreeColoring>(test);
 
+  std::ofstream out(argv[argc - 1]);
+  if (!out) {
+    std::cerr << "Could not open " << argv[argc - 1] << " for writing.\n";
+    return 2;
+  }
+  // dump results
+  out << "NAME,GREEDYTIME,LDOCTIME,IDCTIME\n";
+  for (size_t i = 0; i < testNames.size(); ++i) {
+    out << testNames[i] << ',' << greedyResults[i].median << ','
+        << ldocResults[i].median << ',' << idcResults[i].median << "\n";
+  }
   return 0;
 }
 /*** End of file: main.cpp ***/

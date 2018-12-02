@@ -63,7 +63,7 @@ void greedyColoring(ColoredGraph& graph,
   for (++iterNodes; iterNodes != nodesPermut.end(); ++iterNodes) {
     // find the smallest unused color
     graph[*iterNodes].color() = findSmallestUnusedColor(
-        graph[*iterNodes].transitions(), neighboursColors, graph);
+        graph[*iterNodes].edges(), neighboursColors, graph);
     if (graph[*iterNodes].color() > graph.colorCount())
       // we have brand new color here
       ++graph.colorCount();
@@ -86,7 +86,7 @@ void greedyColoring(ColoredGraph& graph) {
 void greedyColoringWithSet(ColoredGraph& graph) {
   for (auto& n : graph) {
     std::set<size_t> neighboursColors;
-    for (const auto& neighbourIndex : n.transitions())
+    for (const auto& neighbourIndex : n.edges())
       neighboursColors.insert(graph[neighbourIndex].color());
 
     // instead of if in for loop we just remove NO_COLOR after
@@ -124,7 +124,7 @@ void largestDegreeOrderingColoring(ColoredGraph& graph) {
       nodeDeg;  // the pair is: node degree, node id
   // get degree of each vertex
   for (const auto& node : graph)
-    nodeDeg.push_back(std::make_pair(node.transitions().size(), node.id()));
+    nodeDeg.push_back(std::make_pair(node.edges().size(), node.id()));
 
   // sort DESC, because we are starting with the largest degree
   std::sort(nodeDeg.begin(), nodeDeg.end(), std::greater<>());
@@ -161,7 +161,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
 
   for (const auto& node : graph) {
     notColoredNodes.insert(node.id());
-    size_t degree = node.transitions().size();
+    size_t degree = node.edges().size();
     nodeDeg[node.id()] = degree;
     if (degree > maxDegree) {
       maxDegreeNode = node.id();
@@ -176,7 +176,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   // delete the colored one
   notColoredNodes.erase(maxDegreeNode);
   // update neighbors colors
-  for (const auto& edge : graph[maxDegreeNode].transitions())
+  for (const auto& edge : graph[maxDegreeNode].edges())
     ++numberOfColoredNeighbors[edge];
 
   std::vector<bool> neighboursColors(graph.size(), false);
@@ -210,7 +210,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
     // now is time to try color
 
     graph[theChosenOne].color() = findSmallestUnusedColor(
-        graph[theChosenOne].transitions(), neighboursColors, graph);
+        graph[theChosenOne].edges(), neighboursColors, graph);
 
     if (graph[theChosenOne].color() > graph.colorCount())
       // we have brand new color here
@@ -219,7 +219,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
     // ok, the node is now colored
     notColoredNodes.erase(theChosenOne);
     // update neighbors colors
-    for (const auto& edge : graph[maxDegreeNode].transitions())
+    for (const auto& edge : graph[maxDegreeNode].edges())
       ++numberOfColoredNeighbors[edge];
   }
 }
