@@ -51,10 +51,12 @@ int main(int argc, char* argv[]) {
     return 2;
   }
   // dump results
-  out << "NAME,GREEDYTIME,LDOCTIME,IDCTIME\n";
+  out << "NAME,GREEDYTIME,GREEDYCOLORS,LDOCTIME,LDOCCOLORS,IDCTIME,IDCCOLORS\n";
   for (size_t i = 0; i < testNames.size(); ++i) {
     out << testNames[i] << ',' << greedyResults[i].median << ','
-        << ldocResults[i].median << ',' << idcResults[i].median << "\n";
+        << greedyResults[i].colorCount << ',' << ldocResults[i].median << ','
+        << ldocResults[i].colorCount << ',' << idcResults[i].median << ','
+        << idcResults[i].colorCount << "\n";
   }
   return 0;
 }

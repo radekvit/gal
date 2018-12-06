@@ -63,28 +63,26 @@ void incidenceDegreeOrdering(ColoredGraph& graph);
 
 class GreedyColoring {
  public:
-  static void color(ColoredGraph& graph) noexcept {
-    return greedyColoring(graph);
-  }
+  static void color(ColoredGraph& graph) { return greedyColoring(graph); }
 };
 
 class GreedyColoringWithSet {
  public:
-  static void color(ColoredGraph& graph) noexcept {
+  static void color(ColoredGraph& graph) {
     return greedyColoringWithSet(graph);
   }
 };
 
 class LargestDegreeOrderingColoring {
  public:
-  static void color(ColoredGraph& graph) noexcept {
+  static void color(ColoredGraph& graph) {
     return largestDegreeOrderingColoring(graph);
   }
 };
 
 class IncidenceDegreeColoring {
  public:
-  static void color(ColoredGraph& graph) noexcept {
+  static void color(ColoredGraph& graph) {
     return incidenceDegreeOrdering(graph);
   }
 };

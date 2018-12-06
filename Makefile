@@ -37,7 +37,8 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS) $(LIBHEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-rm -r $(OBJFILES) $(APPNAME) $(DOC)/html
+	-rm -r $(OBJFILES) $(APPNAME)
+	$(MAKE) -C data clean
 
 format:
 	-clang-format -style=file -i $(SRC)/*.cpp $(SRC)/*.hpp $(INCLUDE)/*.h

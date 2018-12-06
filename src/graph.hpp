@@ -29,6 +29,7 @@ class ColoredGraph {
   using const_iterator = std::vector<Node>::const_iterator;
 
   static constexpr size_t NO_COLOR = 0;
+  static constexpr size_t FIRST_COLOR = 1;
 
   /**
    * Creates graph from vector of vectors of edges.

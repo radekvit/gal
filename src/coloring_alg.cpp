@@ -38,7 +38,7 @@ size_t findSmallestUnusedColor(const std::vector<size_t>& neighbors,
   for (size_t i = 0; i < neighboursColors.size(); ++i) {
     // find the smallest unused color
     if (!neighboursColors[i]) {
-      smallest = graph.NO_COLOR + i + 1;
+      smallest = graph.FIRST_COLOR + i;
       break;
     }
   }
@@ -57,7 +57,7 @@ void greedyColoring(ColoredGraph& graph,
     return;  // yeah, my work is done
 
   std::vector<bool> neighboursColors(graph.size(), false);
-  graph[*iterNodes].color() = graph.NO_COLOR + 1;
+  graph[*iterNodes].color() = graph.FIRST_COLOR;
   graph.colorCount() = 1;
 
   for (++iterNodes; iterNodes != nodesPermut.end(); ++iterNodes) {
@@ -95,7 +95,7 @@ void greedyColoringWithSet(ColoredGraph& graph) {
     if (neighboursColors.size() < graph.colorCount()) {
       // we can recycle smallest unused color
       size_t tryColor =
-          graph.NO_COLOR + 1;  // we are starting with smallest possible color
+          graph.FIRST_COLOR;  // we are starting with smallest possible color
       for (size_t usedColor : neighboursColors) {
         // neighboursColors is order so we can check just difference
         if (usedColor - tryColor > 0) {
@@ -170,7 +170,7 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
   }
 
   // set color to max degree node
-  graph[maxDegreeNode].color() = graph.NO_COLOR + 1;
+  graph[maxDegreeNode].color() = graph.FIRST_COLOR;
   graph.colorCount() = 1;
 
   // delete the colored one
