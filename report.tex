@@ -1,0 +1,127 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mathtools}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\usepackage{calrsfs}
+
+\DeclareMathAlphabet{\pazocal}{OMS}{zplm}{m}{n}
+
+\newcommand{\Lb}{\pazocal{L}}
+
+%define Input and Output commands in algorithmicx
+\algnewcommand\algorithmicinput{\textbf{Vstup:}}
+\algnewcommand\Input{\item[\algorithmicinput]}
+
+\algnewcommand\algorithmicoutput{\textbf{Výstup:}}
+\algnewcommand\Output{\item[\algorithmicoutput]}
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\let\oldepsilon\epsilon
+\let\epsilon\varepsilon
+\let\emptystring\varepsilon
+
+\def\CC{{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny\bf ++}}}
+\def\CS{{\settoheight{\dimen0}{C}C\kern-.05em \resizebox{!}{\dimen0}{\raisebox{\depth}{\#}}}}
+
+\author{Martin Dočekal \texttt{xdocek09}\\Radek Vít \texttt{xvitra00}}
+\title{
+	\includegraphics[scale=0.6]{FIT_barevne_PANTONE_CZ.pdf}\\
+	GAL 2018\\
+	Porovnání složitosti algoritmů barvení grafů
+}
+
+
+\begin{document}
+\newpage
+\maketitle
+
+\newpage
+
+\section{Úvod}
+Tato práce si dává za cíl vytvořit program, který bude schopen experimentálně porovnávat vybrané algoritmy pro barvení grafů. Bude umožňovat i automatické generování grafů, jelikož manuální tvorba velkých grafů (třeba i jen stovky vrcholů) je problematická.
+V druhé části práce představíme zkoumané algoritmy barvení grafů a ukážeme výsledky experimentů.
+
+\section{Barvení grafů}
+Barvení grafů je jedním z problémů z teorie grafů. Cílem barvení je přiřazení každému uzlu barvu (číslo) tak, aby žádný sousední uzel neměl stejnou barvu.
+Tomuto říkáme barvení vrcholů, tato práce se jím zabývá.
+Ovšem existuje například i barvení hran či stěn, kterými se tato práce nezabývá. %todo citace
+
+Nechť $G=(V,E)$ je neorientovaný graf, kde $n = |V|$ a $m = |E|$. Pak obarvením rozumíme funkci:
+$$f: 	V \rightarrow B$$
+Kde B je množina barev a $\{ u, v \} \in E \Rightarrow f(u) \not= f(v)$. %todo citace
+Pro zjednodušení uvažujeme množinu vrcholů velikosti $n$ za $V = \{ i \in \mathbb{N} | 1 \leq i \leq n \}$
+
+\section{Vybrané algoritmy barvení grafů}
+V této části představíme implementované a zkoumané algoritmy barvení vrcholů.
+
+Z důvodu velké časové složitosti obarvení grafu nejmenším možným počtem barev používáme
+pro barvení grafu heuristiky, které pracují rychle, ale jejich výsledkem je větší než minimální počet barev.
+\subsection{Greedy Coloring}
+\begin{algorithm}
+\caption{Gredy coloring} %todo citace
+\label{Greedy coloring}
+\begin{algorithmic}
+\Input Neorientovaný graf $G = (V, E)$
+\Output funkce obarvení grafu $f: 	V \rightarrow B$
+\State Vyber náhodnou permutaci $p(1), \dots, p(n)$ čísel $1 \dots |V|$
+\ForAll{$i \in <1, |V|>$}
+	\State $v \leftarrow p(i)$
+	\State $S \leftarrow \{ \text{barvy všech obarvených sousedů uzlu v} \}$
+	\State $f(v) \leftarrow \text{Nejmenší barva, která není v S}$ 
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+Algoritmus prochází uzly v předem stanoveném pořadí.
+V pseudokódu je uváděna náhodná permutace, ale v naší implementaci používáme pořadí vrcholů, které je dáno načtením/vygenerováním daného grafu.
+Každý vrchol je obarven nejmenší nepoužitou barvou u svých sousedů.
+Z této vlastnosti plyne, že obarvení grafu závisí na zvoleném pořadí uzlů.
+
+Časová složitost algoritmu je $O(n+m)$.
+Jelikož procházíme všechny uzly a při hledání použitelné barvy procházíme všechny sousedy daného uzlu a poznačujeme si použité barvy ($O(m)$).
+
+Nalezení minimální nepoužité barvy lze zvládnout v maximálně $x+1$ krocích (kde $x <= m$).
+Protože lze použité barvy ukládat do pole flagů (použitá/nepoužitá) o maximální velikosti $n$ (pro každý vrchol jedna barva),
+kde index do pole odpovídá dané barvě.
+Potom toto pole od začátku procházet a zastavit se na první nepoužité barvě.
+Má-li daný vrchol $x$ sousedů, tak v nejhorším možném případě, kdy sousedi používají všechny barvy $1$ až $x$ (pokud indexujeme od 1),
+se zastavím na indexu $x+1$.
+
+\subsection{Largest Degree coloring}
+\begin{algorithm}
+\caption{Gredy coloring} %todo citace
+\label{Greedy coloring}
+\begin{algorithmic}
+\Input Neorientovaný graf $G = (V, E)$
+\Output funkce obarvení grafu $f: 	V \rightarrow B$
+\State $d[1 \dots |V|] \leftarrow []$
+\ForAll{$i \in <1, |V|>$}
+	\State $d[i] \leftarrow \text{počet sousedících uzlů s }i$
+\EndFor
+\State $\text{SortedN} \leftarrow \text{Sestupně seřazené uzly podle stupně (d)}$
+\ForAll{$v \in \text{SortedN}$}
+	\State $S \leftarrow \{ \text{barvy všech obarvených sousedů uzlu v} \}$
+	\State $f(v) \leftarrow \text{Nejmenší barva, která není v S}$ 
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+Ve své podstatě se jedná o Greedy coloring s nenáhodnou permutací.
+Pořadí je zde určeno sestupně na základě stupně uzlu (množství sousedních uzlů).
+Časová složitost je zde $O((n* \log n) + n + m)$
+Spočtení stupňů uzlu zvládneme v $O(n+m)$.
+Seřazení uzlů podle jejich stupně lze provést v $O(n * \log n)$.
+Nakonec provedení greedy coloring má opět složitost $(O(n + m)$. 
+
+Algoritmus by měl za cenu vyšší složitosti dosahovat lepších výsledků (menšího celkového počtu barev) než greedy coloring.
+
+\end{document}
