@@ -47,27 +47,27 @@
 \newpage
 
 \section{Úvod}
-Tato práce si dává za cíl vytvořit program, který bude schopen experimentálně porovnávat vybrané algoritmy pro barvení grafů. Bude umožňovat i automatické generování grafů, jelikož manuální tvorba velkých grafů (třeba i jen stovky vrcholů) je problematická.
+Tato práce si dává za cíl vytvořit program, který bude schopen experimentálně porovnávat vybrané algoritmy pro barvení grafů. Bude umožňovat i automatické generování grafů, jelikož manuální tvorba velkých grafů (třeba i jen stovky uzlů) je problematická.
 V druhé části práce představíme zkoumané algoritmy barvení grafů a ukážeme výsledky experimentů.
 
 \section{Barvení grafů}
 Barvení grafů je jedním z problémů z teorie grafů. Cílem barvení je přiřazení každému uzlu barvu (číslo) tak, aby žádný sousední uzel neměl stejnou barvu.
-Tomuto říkáme barvení vrcholů, tato práce se jím zabývá.
-Ovšem existuje například i barvení hran či stěn, kterými se tato práce nezabývá. %todo citace
+Tomuto říkáme barvení uzlů, tato práce se jím zabývá.
+Ovšem existuje například i barvení hran či stěn, kterými se tato práce nezabývá (viz. \cite{lit1}.
 
 Nechť $G=(V,E)$ je neorientovaný graf, kde $n = |V|$ a $m = |E|$. Pak obarvením rozumíme funkci:
 $$f: 	V \rightarrow B$$
-Kde B je množina barev a $\{ u, v \} \in E \Rightarrow f(u) \not= f(v)$. %todo citace
-Pro zjednodušení uvažujeme množinu vrcholů velikosti $n$ za $V = \{ i \in \mathbb{N} | 1 \leq i \leq n \}$
+Kde B je množina barev a $\{ u, v \} \in E \Rightarrow f(u) \not= f(v)$ (viz. \cite{lit2}).
+Pro zjednodušení uvažujeme množinu uzlů velikosti $n$ za $V = \{ i \in \mathbb{N} | 1 \leq i \leq n \}$
 
 \section{Vybrané algoritmy barvení grafů}
-V této části představíme implementované a zkoumané algoritmy barvení vrcholů.
+V této části představíme implementované a zkoumané algoritmy barvení uzlů.
 
 Z důvodu velké časové složitosti obarvení grafu nejmenším možným počtem barev používáme
 pro barvení grafu heuristiky, které pracují rychle, ale jejich výsledkem je větší než minimální počet barev.
 \subsection{Greedy Coloring}
 \begin{algorithm}
-\caption{Gredy coloring} %todo citace
+\caption{Greedy coloring (viz. \cite{lit3})}
 \label{Greedy coloring}
 \begin{algorithmic}
 \Input Neorientovaný graf $G = (V, E)$
@@ -83,8 +83,8 @@ pro barvení grafu heuristiky, které pracují rychle, ale jejich výsledkem je 
 \end{algorithm}
 
 Algoritmus prochází uzly v předem stanoveném pořadí.
-V pseudokódu je uváděna náhodná permutace, ale v naší implementaci používáme pořadí vrcholů, které je dáno načtením/vygenerováním daného grafu.
-Každý vrchol je obarven nejmenší nepoužitou barvou u svých sousedů.
+V pseudokódu je uváděna náhodná permutace, ale v naší implementaci používáme pořadí uzlů, které je dáno načtením/vygenerováním daného grafu.
+Každý uzel je obarven nejmenší nepoužitou barvou u svých sousedů.
 Z této vlastnosti plyne, že obarvení grafu závisí na zvoleném pořadí uzlů.
 
 Časová složitost algoritmu je $O(n+m)$.
@@ -92,15 +92,15 @@ Jelikož procházíme všechny uzly (celkem $O(n)$ iterací)
 a při hledání použitelné barvy procházíme všechny sousedy daného uzlu a poznačujeme si použité barvy (celkem $O(m)$).
 
 Nalezení minimální nepoužité barvy lze zvládnout v maximálně $x+1$ krocích (kde $x <= m$).
-Protože lze použité barvy ukládat do pole flagů (použitá/nepoužitá) o maximální velikosti $n$ (pro každý vrchol jedna barva),
+Protože lze použité barvy ukládat do pole flagů (použitá/nepoužitá) o maximální velikosti $n$ (pro každý uzel jedna barva),
 kde index do pole odpovídá dané barvě.
 Potom toto pole od začátku procházet a zastavit se na první nepoužité barvě.
-Má-li daný vrchol $x$ sousedů, tak v nejhorším možném případě, kdy sousedi používají všechny barvy $1$ až $x$ (pokud indexujeme od 1),
+Má-li daný uzel $x$ sousedů, tak v nejhorším možném případě, kdy sousedi používají všechny barvy $1$ až $x$ (pokud indexujeme od 1),
 se zastavím na indexu $x+1$.
 
-\subsection{Largest Degree coloring}
+\subsection{Largest Degree ordering (LDO)}
 \begin{algorithm}
-\caption{Gredy coloring} %todo citace
+\caption{LDO coloring (viz. \cite{lit4})} %todo citace
 \label{Greedy coloring}
 \begin{algorithmic}
 \Input Neorientovaný graf $G = (V, E)$
@@ -121,15 +121,15 @@ se zastavím na indexu $x+1$.
 Ve své podstatě se jedná o Greedy coloring s nenáhodnou permutací.
 Pořadí je zde určeno sestupně na základě stupně uzlu (množství sousedních uzlů).
 Časová složitost je zde $O((n* \log n) + n + m)$
-Spočtení stupňů uzlu zvládneme v $O(n)$ (předpokládáme znalost velikosti seznamů sousedů, což je triviálně implementovatelné).
+Spočtení stupňů uzlu zvládneme v $O(n)$ (předpokládáme znalost velikosti seznamů sousedů v konstantním čase).
 Seřazení uzlů podle jejich stupně lze provést v $O(n * \log n)$.
 Nakonec provedení greedy coloring má opět složitost $(O(n + m)$. 
 
 Algoritmus by měl za cenu vyšší složitosti dosahovat lepších výsledků (menšího celkového počtu barev) než greedy coloring.
 
-\subsection{Incidence degree ordering}
+\subsection{Incidence degree ordering (IDO)}
 \begin{algorithm}
-\caption{Gredy coloring} %todo citace
+\caption{IDO coloring (viz. \cite{lit4})} %todo citace
 \label{Greedy coloring}
 \begin{algorithmic}
 \Input Neorientovaný graf $G = (V, E)$
@@ -172,10 +172,156 @@ Nejmenší barva všech uzlů je opět vybraná v celkem $O(m)$.
 Odstranění obarveného uzlu lze provést v konstantním čase při použití seznamu pro $r$.
 Algoritmus má celkovou složitost $O(n^2 + m)$.
 
-\section{Implementace}
+\section{Implementované nástroje}
+Pro vypracování tohoto projektu jsme implementovali dva nástroje;
+nástroj pro měření rychlosti barvení grafů a nástroj pro jejich generování.
+
 \subsection{Generování grafů}
+Nástroj pro generování grafů se nachází ve složce \verb|data/|. S pomocí příkazu \verb|make generate N=n E=m| lze vygenerovat neorientovaný graf s $n$ uzly a $m$ hranami.
+Nástroj nejdříve náhodně vygeneruje graf s $n$ uzly a s nejvíce $m$ hranami. Následně dogeneruje případné chybějící hrany, nejčastěji do některého z prvních uzlů.
+
 \subsection{Benchmark pro barvení grafů}
+Nástroj pro barvení grafů se nachází v kořenovém adresáři projektu.
+Lze jej spustit jako \verb|./gal2018 input1 [input2 ...] output.csv|.
+Po jeho spuštění nejdříve načte všechny vstupní grafy (hrany jsou reprezentované seznamem sousedů),
+a následně spustí pro každý z výše popsaných algoritmů pět běhů.
+Jako výsledek se použije medián z těchto pěti běhů pro každý algoritmus.
+Z výsledků pro každý algoritmus je do výsledného \verb|.csv| souboru zapsán medián z časů běhů (v milisekundách) daného algoritmu a výsledný počet barev.
+
+Program je limitovaný velikostí paměti, jelikož nejdříve načítá všechny testované grafy do paměti.
+Tato limitace se projevuje zejména při velkém množství hustých grafů s velikostmi přes deset tisíc uzlů.
 
 \subsection{Experimenty}
+Experimenty jsme provedli v několika bězích, testující nárust počtu uzlů, a nárust počtu hran.
+Experimenty byly provedeny s grafy generovanými výše popsaným nástrojem.
+V každém experimentu byl použitý jeden náhodný graf s uvedenými počty uzlů a hran.
+
+Výsledky experimentů byly ovlivněné způsobem generace náhodných grafů. Pro greedy coloring bylo velmi pravděpodobné, že
+pořadí barvených uzlů téměř odpovídalo seřazení podle jejich stupňů. Tento fakt nicméně ovlivnil pouze počet barev, nikoliv časovou složitost.
+
+Grafy použité v jednotlivých experimentech lze stáhnout z Google Drive: \url{https://drive.google.com/open?id=1eLz35A3oYa0jiQXwKZBvl4DR3HC99kbi}.
+
+Prostorová složitost je pro každý z algoritmů stejná, a to lineární (vstup i případná pomocná pole), nebyla tedy předmětem experimentů.
+
+\subsection{Experiment 1: Izolované grafy}
+V tomto experimentu jsme porovnávali časy grafů s 0 hranami.
+Testovány byly grafy o velikostech 5\,000, 10\,000, 15\,000 a 20\,000 uzlů.
+Výsledky ukazují vliv změny počtu uzlů na rychlost algoritmů.
+\begin{table}[h!]
+  \begin{center}
+    \label{tab:table1}
+    \begin{tabular}{|l|c|c|c|}
+			\hline
+      \textbf{Počet uzlů} & \textbf{Greedy coloring} & \textbf{LDO coloring} & \textbf{IDO coloring}\\
+      \hline
+       5\,000 & 0.015 & 0.081 & 27.494 \\ \hline
+      10\,000 & 0.032 & 0.170 & 118.215 \\ \hline
+      15\,000 & 0.047 & 0.244 & 267.494 \\ \hline
+      20\,000 & 0.062 & 0.482 & 478.881 \\ \hline
+    \end{tabular}
+    \caption{Experiment 1: časy [ms]}
+  \end{center}
+\end{table}
+
+Pro greedy coloring rostl s každým přírustkem 5\,000 výskedný čas o cca 0.015 milisekund, což odpovídá předpokládanému lineárnímu růstu.
+Pro LDO coloring růst času odpovídá linearitmické složitosti, t.j. jen o málo rychleji než lineárně.
+Pro IDO odpovídá růst časů kvadratickému růstu podle počtu uzlů.
+
+\subsection{Experiment 2: Změna počtu uzlů v grafech se stejným počtem hran}
+V tomto experimentu jsme porovnávali časy grafů s 200\,000 hranami.
+Testovány byly grafy o velikostech 4\,000, 6\,000, 8\,000 a 10\,000 uzlů.
+Výsledky ukazují vliv změny počtu uzlů na rychlost algoritmů.
+Zároveň testujeme algoritmy pro řídké grafy (200\,000 uzlů je cca desetina možných uzlů grafu s 2\,000 uzly).
+%todo výsledky
+\begin{table}[h!]
+  \begin{center}
+    \label{tab:table1}
+    \begin{tabular}{|l|c|c|c|}
+			\hline
+      \textbf{Počet uzlů} & \textbf{Greedy coloring} & \textbf{LDO coloring} & \textbf{IDO coloring}\\
+      \hline
+       4\,000 & 1.170 & 2.651 & 119 \\ \hline
+       6\,000 & 1.334 & 2.868 & 166 \\ \hline
+       8\,000 & 1.835 & 3.175 & 282 \\ \hline
+      10\,000 & 1.904 & 4.030 & 410 \\ \hline
+    \end{tabular}
+    \caption{Experiment 2: časy [ms]}
+  \end{center}
+\end{table}
+
+\begin{table}[h!]
+  \begin{center}
+    \label{tab:table1}
+    \begin{tabular}{|l|c|c|c|}
+			\hline
+      \textbf{Počet uzlů} & \textbf{Greedy coloring} & \textbf{LDO coloring} & \textbf{IDO coloring}\\
+      \hline
+       4\,000 & 42 & 41 & 41 \\ \hline
+       6\,000 & 31 & 30 & 30 \\ \hline
+       8\,000 & 24 & 24 & 24 \\ \hline
+      10\,000 & 21 & 20 & 20 \\ \hline
+    \end{tabular}
+    \caption{Experiment 2: počet barev}
+  \end{center}
+\end{table}
+
+\subsection{Experiment 3: Změna počtu hran v hustých grafech}
+Poslední experiment testoval husté grafy s 10\,000 uzly s počty hran mezi 10\,000\,000 a 49\,995\,000 (plně propojený graf).
+
+\begin{table}[h!]
+  \begin{center}
+    \label{tab:table1}
+    \begin{tabular}{|l|c|c|c|}
+			\hline
+      \textbf{Počet hran} & \textbf{Greedy coloring} & \textbf{LDO coloring} & \textbf{IDO coloring}\\
+      \hline
+       10\,000\,000 & 77  & 110 & 439 \\ \hline
+       20\,000\,000 & 146 & 209 & 502 \\ \hline
+       30\,000\,000 & 208 & 284 & 568 \\ \hline
+       40\,000\,000 & 260 & 317 & 626 \\ \hline
+       49\,995\,000 & 321 & 334 & 746 \\ \hline
+    \end{tabular}
+    \caption{Experiment 3: časy [ms]}
+  \end{center}
+\end{table}
+
+
+\begin{table}[h!]
+  \begin{center}
+    \label{tab:table1}
+    \begin{tabular}{|l|c|c|c|}
+			\hline
+      \textbf{Počet hran} & \textbf{Greedy coloring} & \textbf{LDO coloring} & \textbf{IDO coloring}\\
+      \hline
+       10\,000\,000 & 720  & 716 & 716 \\ \hline
+       20\,000\,000 & 1595 & 1591 & 1591 \\ \hline
+       30\,000\,000 & 2780 & 2773 & 2773 \\ \hline
+       40\,000\,000 & 4587 & 4582 & 4582 \\ \hline
+       49\,995\,000 & 10000 & 10000 & 10000 \\ \hline
+    \end{tabular}
+    \caption{Experiment 3: počet barev}
+  \end{center}
+\end{table}
+
+Všechny uvedené algoritmy měly podle teoretické složitosti vůči počtům hran růst lineárně.
+Čas greedy algoritmu i IDO rostl téměř lineárně podle předpokladu.
+LDO zpomaloval pomaleji až při velmi velké hustotě hran, pro ostatní grafy také zpomaloval lineárně podle počtu hran.
+
+\section{Závěr}
+Implementovali jsme některé algoritmy pro barvení grafů,
+a teoreticky a experimentálně jsme porovnali jejich časovou složitost.
+
+Všechny uvedené algoritmy mají vůči počtu hran lineární časovou složitost, a experimentální výsledky tomuto předpokladu odpovídají.
+Experimenty také odpovídají odvozeným časovým složitostem jednotlivých algoritmů vůči počtu uzlů.
+
+Greedy coloring je (z uvedených algoritmů) algoritmus s nejlepší časovou složitostí a pro testované grafy srovnatelnými výsledky jako ostatní algoritmy.
+V žádném testovaném grafu se nevyskytnul graf, který by měl pro LDO horší výsledky než IDO.
+IDO tak za vyšší složitost nepřinesl lepší výsledky.
+
+\renewcommand\refname{Literatura}
+\bibliographystyle{plain}
+\begin{flushleft}
+\bibliography{report}
+\end{flushleft}
 
 \end{document}

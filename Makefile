@@ -48,7 +48,12 @@ test:
 	make -C test test
 
 doc:
-	make -C $(DOC)
+	pdflatex report
+	clear
+	echo -----
+	bibtex report > biberrors.log
+	pdflatex report >> /dev/null
+	pdflatex report > pdferrors.log
 
 clean:
 
