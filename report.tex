@@ -78,6 +78,7 @@ pro barvení grafu heuristiky, které pracují rychle, ale jejich výsledkem je 
 	\State $S \leftarrow \{ \text{barvy všech obarvených sousedů uzlu v} \}$
 	\State $f(v) \leftarrow \text{Nejmenší barva, která není v S}$ 
 \EndFor
+\State \Return $f$
 \end{algorithmic}
 \end{algorithm}
 
@@ -87,7 +88,8 @@ Každý vrchol je obarven nejmenší nepoužitou barvou u svých sousedů.
 Z této vlastnosti plyne, že obarvení grafu závisí na zvoleném pořadí uzlů.
 
 Časová složitost algoritmu je $O(n+m)$.
-Jelikož procházíme všechny uzly a při hledání použitelné barvy procházíme všechny sousedy daného uzlu a poznačujeme si použité barvy ($O(m)$).
+Jelikož procházíme všechny uzly (celkem $O(n)$ iterací)
+a při hledání použitelné barvy procházíme všechny sousedy daného uzlu a poznačujeme si použité barvy (celkem $O(m)$).
 
 Nalezení minimální nepoužité barvy lze zvládnout v maximálně $x+1$ krocích (kde $x <= m$).
 Protože lze použité barvy ukládat do pole flagů (použitá/nepoužitá) o maximální velikosti $n$ (pro každý vrchol jedna barva),
@@ -112,16 +114,65 @@ se zastavím na indexu $x+1$.
 	\State $S \leftarrow \{ \text{barvy všech obarvených sousedů uzlu v} \}$
 	\State $f(v) \leftarrow \text{Nejmenší barva, která není v S}$ 
 \EndFor
+\State \Return $f$
 \end{algorithmic}
 \end{algorithm}
 
 Ve své podstatě se jedná o Greedy coloring s nenáhodnou permutací.
 Pořadí je zde určeno sestupně na základě stupně uzlu (množství sousedních uzlů).
 Časová složitost je zde $O((n* \log n) + n + m)$
-Spočtení stupňů uzlu zvládneme v $O(n+m)$.
+Spočtení stupňů uzlu zvládneme v $O(n)$ (předpokládáme znalost velikosti seznamů sousedů, což je triviálně implementovatelné).
 Seřazení uzlů podle jejich stupně lze provést v $O(n * \log n)$.
 Nakonec provedení greedy coloring má opět složitost $(O(n + m)$. 
 
 Algoritmus by měl za cenu vyšší složitosti dosahovat lepších výsledků (menšího celkového počtu barev) než greedy coloring.
+
+\subsection{Incidence degree ordering}
+\begin{algorithm}
+\caption{Gredy coloring} %todo citace
+\label{Greedy coloring}
+\begin{algorithmic}
+\Input Neorientovaný graf $G = (V, E)$
+\Output funkce obarvení grafu $f: 	V \rightarrow B$
+\State $d[1 \dots |V|] \leftarrow []$
+\ForAll{$i \in <1, |V|>$}
+	\State $d[i] \leftarrow \text{počet sousedících uzlů s }i$
+\EndFor
+\State $cn[1 \dots |V|] \leftarrow [0]$ - počet obarvených sousedních uzlů
+\State $r = V$ - neobarvené uzly
+\While{$|r| > 0$}
+	\State $v \leftarrow -1$ - neexistující uzel
+	\ForAll{$x \in r$}
+		\If{$v = -1$ or $cv[x] > cv[v]$}
+			\State $v \leftarrow x$
+		\EndIf
+		\If{$cv[x] = cv[v]$ and $d[x] > d[v]$}
+			\State $v \leftarrow x$
+		\EndIf
+	\EndFor
+	\State $S \leftarrow \{ \text{barvy všech obarvených sousedů uzlu v} \}$
+	\State $f(v) \leftarrow \text{Nejmenší barva, která není v S}$
+	\ForAll{$x \in \{\text{Sousední uzly v}\}$}
+		\State $cv[x] \leftarrow cv[x] + 1$
+	\EndFor
+	\State Remove $v$ from $r$
+\EndWhile
+\State \Return $f$
+\end{algorithmic}
+\end{algorithm}
+
+V algoritmu popsaném v \cite{ar4} (a v implementaci) se první uzel obarvuje hned po určení počtů sousedících uzlů; tímto se ušetří jeden cyklus smyčky,
+na složitost tato optimalizace nemá vliv a pro zjednodušení pseudokódu nebyla uvedena.
+
+Uzly vybíráme nejdříve podle největšího počtu obarvených sousedů, a v případě stejného počtu obarvených sousedů vybereme pro barvení uzel s vyšším celkovým počtem sousedů.
+
+Spočtení stupňů uzlů zvládneme v $O(n)$.
+Samotný cyklus provádíme $n$krát, a v každé iteraci vybíráme uzel k obarvení z průměrně $n / 2$ uzlů.
+Nejmenší barva všech uzlů je opět vybraná v celkem $O(m)$.
+Odstranění obarveného uzlu lze provést v konstantním čase při použití seznamu pro $r$.
+Algoritmus má celkovou složitost $O(n^2 + m)$.
+
+\section{Experimenty}
+
 
 \end{document}
