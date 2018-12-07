@@ -9,6 +9,8 @@
 #include "coloring_alg.h"
 
 #include <algorithm>
+#include <deque>
+#include <numeric>
 #include <set>
 #include <tuple>
 #include <unordered_set>
@@ -221,6 +223,68 @@ void incidenceDegreeOrdering(ColoredGraph& graph) {
     // update neighbors colors
     for (const auto& edge : graph[maxDegreeNode].edges())
       ++numberOfColoredNeighbors[edge];
+  }
+}
+
+int saturationDegree(const ColoredGraph& graph, size_t node) {
+  static std::unordered_set<size_t> usedColors;
+  for (auto&& neighbor : graph[node].edges()) {
+    usedColors.insert(graph[neighbor].color());
+  }
+  usedColors.erase(graph.NO_COLOR);
+  int degree = usedColors.size();
+  usedColors.clear();
+  return degree;
+}
+
+void sdoLdoColoring(ColoredGraph& graph) {
+  std::vector<bool> colorVec(graph.size(), false);
+  std::vector<size_t> remainingNodes(graph.size(), 0);
+  // stored saturation degrees
+  std::vector<int> satDegrees(graph.size(), 0);
+  std::set<size_t> updateSaturation;
+  for (auto&& node : graph) {
+    satDegrees[node.id()] = saturationDegree(graph, node.id());
+  }
+  std::iota(remainingNodes.begin(), remainingNodes.end(), 0);
+  while (!remainingNodes.empty()) {
+    size_t selectedNode = 0;
+    size_t index = 0;
+    int maxSaturation = -1;
+
+    // select node to color
+    for (size_t i = 0; i < remainingNodes.size(); ++i) {
+      size_t node = remainingNodes[i];
+      // only update saturation degree if necessary
+      if (updateSaturation.count(node)) {
+        satDegrees[node] = saturationDegree(graph, node);
+      }
+      int saturation = satDegrees[node];
+      if (saturation > maxSaturation) {
+        maxSaturation = saturation;
+        index = i;
+        selectedNode = remainingNodes[i];
+      } else if (saturation == maxSaturation &&
+                 graph[node].edges().size() >
+                     graph[selectedNode].edges().size()) {
+        index = i;
+        selectedNode = remainingNodes[i];
+      }
+    }
+    // color node
+    graph[selectedNode].color() =
+        findSmallestUnusedColor(graph[selectedNode].edges(), colorVec, graph);
+
+    if (graph[selectedNode].color() > graph.colorCount()) {
+      // we have brand new color here
+      ++graph.colorCount();
+    }
+    // set updateSaturation
+    auto&& edges = graph[selectedNode].edges();
+    updateSaturation = {edges.begin(), edges.end()};
+    // remove selected from remaining
+    std::swap(remainingNodes[index], remainingNodes.back());
+    remainingNodes.pop_back();
   }
 }
 

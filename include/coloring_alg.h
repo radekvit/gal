@@ -61,6 +61,13 @@ void largestDegreeOrderingColoring(ColoredGraph& graph);
  */
 void incidenceDegreeOrdering(ColoredGraph& graph);
 
+/**
+ * Color the graph using SDO and LDO heuristics
+ *
+ * Source: http://www.phys.ubbcluj.ro/~zneda/edu/mc/graphcolouring.pdf
+ */
+void sdoLdoColoring(ColoredGraph& graph);
+
 class GreedyColoring {
  public:
   static void color(ColoredGraph& graph) { return greedyColoring(graph); }
@@ -85,6 +92,11 @@ class IncidenceDegreeColoring {
   static void color(ColoredGraph& graph) {
     return incidenceDegreeOrdering(graph);
   }
+};
+
+class SdoLdoColoring {
+ public:
+  static void color(ColoredGraph& graph) { return sdoLdoColoring(graph); }
 };
 
 #endif /* SRC_COLORING_ALG_HPP_ */

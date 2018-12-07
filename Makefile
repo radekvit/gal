@@ -17,6 +17,7 @@ OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 .PHONY: all format clean debug build test pack doc run libbuild cleanall
 
 all: deploy
+	$(MAKE) -C data
 
 init:
 	git submodule init

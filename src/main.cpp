@@ -44,6 +44,9 @@ int main(int argc, char* argv[]) {
   auto ldocResults = benchmark<LargestDegreeOrderingColoring>(test);
   std::cout << "Incidence Degree Coloring\n";
   auto idcResults = benchmark<IncidenceDegreeColoring>(test);
+  // pow(n, 3) complexity, way too large for sensible graphs
+  /*std::cout << "SDO + LDO Coloring\n";
+  auto sdoLdoResults = benchmark<SdoLdoColoring>(test);*/
 
   std::ofstream out(argv[argc - 1]);
   if (!out) {
@@ -51,7 +54,8 @@ int main(int argc, char* argv[]) {
     return 2;
   }
   // dump results
-  out << "NAME,GREEDYTIME,GREEDYCOLORS,LDOCTIME,LDOCCOLORS,IDCTIME,IDCCOLORS\n";
+  out << "NAME,GREEDYTIME,GREEDYCOLORS,LDOCTIME,LDOCCOLORS,IDCTIME,IDCCOLORS,"
+         "\n";
   for (size_t i = 0; i < testNames.size(); ++i) {
     out << testNames[i] << ',' << greedyResults[i].median << ','
         << greedyResults[i].colorCount << ',' << ldocResults[i].median << ','
